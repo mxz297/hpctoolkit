@@ -1715,6 +1715,10 @@ ANode::writeXML_pre(ostream& os, uint metricBeg, uint metricEnd,
 
   // 2. Write associated metrics
   if (doMetrics) {
+    if (metricBeg == metricEnd) {
+      metricBeg = 0;
+      metricEnd = UINT_MAX;
+    }
     os << pfx;
     MetricAccessor *me = metric_accessor(this);
     for (unsigned i = me->idx_ge(metricBeg); i < metricEnd; i = me->idx_ge(i + 1))
