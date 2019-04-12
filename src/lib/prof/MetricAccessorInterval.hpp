@@ -28,6 +28,7 @@ private:
   double cacheVal;
   unsigned int cacheItem;
   unsigned int nzCount;
+  unsigned int shiftCount;
 
   void flush(void) {
     nzCount += (cacheVal != 0);
@@ -88,18 +89,18 @@ private:
  
 public:
   MetricAccessorInterval(void):
-    table(), cacheIter(table.end()), cacheVal(0.), cacheItem(-1), nzCount(0)
+    table(), cacheIter(table.end()), cacheVal(0.), cacheItem(-1), nzCount(0), shiftCount(UINT_MAX/2)
   {
   }
 
   MetricAccessorInterval(const MetricAccessorInterval &src):
     table(src.table), cacheIter(table.end()), cacheVal(src.cacheVal),
-    cacheItem(src.cacheItem), nzCount(src.nzCount)
+    cacheItem(src.cacheItem), nzCount(src.nzCount), shiftCount(src.shiftCount)
   {
   }
 
   MetricAccessorInterval(Prof::Metric::IData &_mdata):
-    table(), cacheIter(table.end()), cacheVal(0.), cacheItem(-1) , nzCount(0)
+    table(), cacheIter(table.end()), cacheVal(0.), cacheItem(-1) , nzCount(0), shiftCount(UINT_MAX/2)
   {
     for (unsigned i = 0; i < _mdata.numMetrics(); ++i) {
       idx(i) = _mdata.metric(i);
@@ -108,7 +109,12 @@ public:
     }
   }
 
+  virtual void shift_indices(int shiftSize) {
+    shiftCount -= shiftSize;
+  }
+
   virtual double &idx(unsigned int mId, unsigned int size = 0) {
+    mId += shiftCount;
     if (cacheItem == mId)
        return cacheVal;
     flush();
@@ -119,6 +125,7 @@ public:
   }
 
   virtual double c_idx(unsigned int mId) const {
+    mId += shiftCount;
     if (cacheItem == mId)
       return cacheVal;
     vector<double> dummy;
@@ -134,20 +141,21 @@ public:
   }
 
   virtual unsigned idx_ge(unsigned mId) const {
+    mId += shiftCount;
     vector<double> dummy;
     MI_Vec key = make_pair(make_pair(mId, mId+1), dummy);
     set<MI_Vec>::iterator it = table.lower_bound(key);
     if (it == table.end()) {
       if (mId <= cacheItem && cacheVal != 0.)
-	return cacheItem;
+	return cacheItem - shiftCount;
       return UINT_MAX;
     }
     unsigned int lo = it->first.first;
     if (mId <= cacheItem && cacheVal != 0. && cacheItem < lo)
-      return cacheItem;
+      return cacheItem - shiftCount;
     if (mId < lo)
-      return lo;
-    return mId;
+      return lo - shiftCount;
+    return mId - shiftCount;
   }
 
   virtual bool empty(void) const {
@@ -157,9 +165,9 @@ public:
 #include <iostream>
   void dump(void)
   {
-    std::cout << "Cache[" << cacheItem<< "] = " << cacheVal << "\n";
+    std::cout << "Cache[" << cacheItem - shiftCount << "] = " << cacheVal << "\n";
     for (set<MI_Vec>::iterator it = table.begin(); it != table.end(); it++) {
-      std::cout << "[" << it->first.first << ", " << it->first.second << "):";
+      std::cout << "[" << it->first.first - shiftCount << ", " << it->first.second - shiftCount << "):";
       for (vector<double>::const_iterator i = it->second.begin(); i != it->second.end(); i++)
 	std::cout << " " << *i;
       std::cout << "\n";

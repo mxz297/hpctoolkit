@@ -1281,6 +1281,11 @@ ANode::mergeDeep_fixInsert(int newMetrics, MergeContext& mrgCtxt)
 	effctLst->push_back(ret.effect);
       }
     }
+    // -----------------------------------------------------
+    // 2. Make space for the metrics of CCT::Tree x
+    // -----------------------------------------------------
+    MetricAccessor *ma = CCT::ANode::metric_accessor(n);
+    ma->shift_indices(newMetrics);
   }
   
   return effctLst;

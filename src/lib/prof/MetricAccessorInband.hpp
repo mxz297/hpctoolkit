@@ -7,6 +7,9 @@
 class MetricAccessorInband : public MetricAccessor {
 public:
   MetricAccessorInband(MetricAccessor *_mdata) : mdata(_mdata) {}
+  virtual void shift_indices(int shiftSize) {
+    return mdata->shift_indices(shiftSize);
+  }
   virtual double &idx(unsigned int mId, unsigned int size = 0) {
     return mdata->idx(mId, size);
   }
