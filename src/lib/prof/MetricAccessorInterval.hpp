@@ -41,8 +41,10 @@ private:
     }
     if (cacheVal == 0)
       return;
+#if 0
     std::cout << "Start: ";
     dump();
+#endif
     MetricInterval ival;
     vector<double> val;
     ival = make_pair(cacheItem, cacheItem+1);
@@ -68,8 +70,10 @@ private:
       table.erase(cacheIter++);
       cacheIter = table.insert(cacheIter, make_pair(ival, val));
     }
+#if 0
     std::cout << "End: ";
     dump();
+#endif
   }
 
   double lookup(unsigned int mId) {
