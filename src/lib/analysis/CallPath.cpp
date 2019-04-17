@@ -203,7 +203,7 @@ read(const Util::StringVec& profileFiles, const Util::UIntVec* groupMap,
   }
   
   // General case
-#if 0
+#if 1
   uint groupId = (groupMap) ? (*groupMap)[0] : 0;
   Prof::CallPath::Profile* prof = read(profileFiles[0], groupId, rFlags);
 
