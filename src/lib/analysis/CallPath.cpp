@@ -154,6 +154,13 @@ readSingle
   return p;
 }
 
+void
+mergePair(Prof::CallPath::Profile* left, Prof::CallPath::Profile* right, int mergeTy, uint mrgFlags)
+{
+    left->merge(*right, mergeTy, mrgFlags);
+    left->metricMgr()->mergePerfEventStatistics(right->metricMgr());
+    left->copyDirectory(right->directorySet());
+}
 
 Prof::CallPath::Profile* 
 readSet
@@ -185,8 +192,8 @@ readSet
     }
 #pragma omp taskwait 
 
-    left->merge(*right, mergeTy, mrgFlags);
-
+    mergePair(left, right, mergeTy, mrgFlags);
+    delete right;
     return left;
   }
 }
@@ -203,42 +210,25 @@ read(const Util::StringVec& profileFiles, const Util::UIntVec* groupMap,
   }
   
   // General case
-#if 1
-  uint groupId = (groupMap) ? (*groupMap)[0] : 0;
-  Prof::CallPath::Profile* prof = read(profileFiles[0], groupId, rFlags);
-
-  // add the directory into the set of directories
-  prof->addDirectory(profileFiles[0]);
-
+  Prof::CallPath::Profile* prof = 0;
 #pragma omp parallel shared(prof)
 {
 #pragma omp master 
 {
+#if 0
+  prof = readSingle(profileFiles, groupMap, 0, rFlags);
   for (uint i = 1; i < profileFiles.size(); ++i) {
-    groupId = (groupMap) ? (*groupMap)[i] : 0;
-    Prof::CallPath::Profile* p = read(profileFiles[i], groupId, rFlags);
-    prof->merge(*p, mergeTy, mrgFlags);
-
-    prof->metricMgr()->mergePerfEventStatistics(p->metricMgr());
+    Prof::CallPath::Profile* p = readSingle(profileFiles, groupMap, i, rFlags);
+    mergePair(prof, p, mergeTy, mrgFlags);
     delete p;
-
-    // add the directory into the set of directories
-    prof->addDirectory(profileFiles[i]);
   }
+#else
+  prof = readSet(profileFiles, groupMap, mergeTy, 
+	         rFlags, mrgFlags, 0, profileFiles.size() - 1);
+#endif
   prof->metricMgr()->mergePerfEventStatistics_finalize(profileFiles.size());
 }
 }
-#else
- Prof::CallPath::Profile* prof = 0;
-#pragma omp parallel shared(prof)
-{
-#pragma omp master 
-{
-  prof = readSet(profileFiles, groupMap, mergeTy, 
-	         rFlags, mrgFlags, 0, profileFiles.size() - 1);
-}
-}
-#endif
   
   return prof;
 }
