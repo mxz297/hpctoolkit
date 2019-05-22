@@ -215,7 +215,7 @@ read(const Util::StringVec& profileFiles, const Util::UIntVec* groupMap,
 {
 #pragma omp master 
 {
-#if 0
+#if 1
   prof = readSingle(profileFiles, groupMap, 0, rFlags);
   for (uint i = 1; i < profileFiles.size(); ++i) {
     Prof::CallPath::Profile* p = readSingle(profileFiles, groupMap, i, rFlags);
