@@ -197,6 +197,8 @@ public:
   unsigned int idx_ge(unsigned int metricId) const {
     return metricId < pm.mEndId() ? metricId : UINT_MAX;
   }
+  void shift_indices(int shiftSize) {}
+  bool empty(void) const { return false;}
 private:
   ParallelAnalysis::PackedMetrics &pm;
   int nodeId;
@@ -208,6 +210,9 @@ public:
   }
   
   virtual double &index(Prof::CCT::ANode *n, uint metricId, uint size) {
+    return pm.idx(n->id(), metricId);
+  }
+  virtual double c_index(Prof::CCT::ANode *n, uint metricId) {
     return pm.idx(n->id(), metricId);
   }
   virtual MetricAccessor *nodeMetricAccessor(Prof::CCT::ANode *n) {
