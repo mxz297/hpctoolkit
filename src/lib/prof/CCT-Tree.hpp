@@ -331,32 +331,27 @@ public:
 private:
   static const std::string NodeNames[TyNUMBER];
 
-  static std::map<const ANode*,MetricAccessor*> s_allMetrics;
-
 public:
   static bool hasMetrics(const ANode *n)
   {
-    std::map<const ANode*, MetricAccessor*>::iterator item = s_allMetrics.find(n);
-    return (item != s_allMetrics.end() &&
-	    !item->second->empty());
+    return (n->m_metrics != NULL);
   }
 
   static MetricAccessor *metric_accessor(const ANode *n)
   {
+    return (n->m_metrics);
+  }
+
+  static MetricAccessor *metric_accessor(ANode *n)
+  {
     if (!hasMetrics(n))
-      s_allMetrics.insert(std::pair<const ANode*,MetricAccessorInterval*>(n,new MetricAccessorInterval));
-#if 0
-    MetricAccessorInterval *mav = static_cast<MetricAccessorInterval*>(s_allMetrics.find(n)->second);
-    mav->dump();
-    return mav;
-#else
-    return (s_allMetrics.find(n)->second);
-#endif
+      n->m_metrics = new MetricAccessorInterval;
+    return (n->m_metrics);
   }
 
   ANode(ANodeTy type, ANode* parent, Struct::ACodeNode* strct = NULL)
     : NonUniformDegreeTreeNode(parent),
-      m_type(type), m_id(threaded_unique_id(2)), m_strct(strct)
+      m_type(type), m_id(threaded_unique_id(2)), m_strct(strct), m_metrics(NULL)
   {
     // pass 2 to threaded_unique_id to keep lower bit clear for 
     // HPCRUN_FMT_RetainIdFlag
@@ -365,7 +360,7 @@ public:
   ANode(ANodeTy type,
 	ANode* parent, Struct::ACodeNode* strct, const Metric::IData& metrics)
     : NonUniformDegreeTreeNode(parent),
-      m_type(type), m_id(threaded_unique_id(2)), m_strct(strct)
+      m_type(type), m_id(threaded_unique_id(2)), m_strct(strct), m_metrics(NULL)
   {
     // pass 2 to threaded_unique_id to keep lower bit clear for 
     // HPCRUN_FMT_RetainIdFlag
@@ -376,13 +371,14 @@ public:
 
   virtual ~ANode()
   {
-    s_allMetrics.erase(this);
+    if (m_metrics != NULL)
+      delete m_metrics;
   }
   
   // deep copy of internals (but without children)
   ANode(const ANode& x)
     : NonUniformDegreeTreeNode(NULL),
-      m_type(x.m_type), /*m_id: skip*/ m_strct(x.m_strct)
+      m_type(x.m_type), /*m_id: skip*/ m_strct(x.m_strct), m_metrics(NULL)
   {
     zeroLinks();
     // pass 2 to threaded_unique_id to keep lower bit clear for 
@@ -403,7 +399,10 @@ public:
       m_type = x.m_type;
       // m_id: skip
       m_strct = x.m_strct;
-      s_allMetrics.erase(this);
+      if (m_metrics) {
+	delete m_metrics;
+	m_metrics = NULL;
+      }
       MetricAccessor *ma = metric_accessor(this);
       MetricAccessor *mb = metric_accessor(&x);
       for (unsigned int i = mb->idx_ge(0); i < UINT_MAX; i = mb->idx_ge(i + 1))
@@ -755,6 +754,7 @@ protected:
   ANodeTy m_type; // obsolete with typeid(), but hard to replace
   uint m_id;
   Struct::ACodeNode* m_strct;
+  MetricAccessor *m_metrics;
 };
 
 
