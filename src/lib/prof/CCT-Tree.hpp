@@ -379,21 +379,6 @@ public:
     s_allMetrics.erase(this);
   }
   
-  // deep copy of internals (but without children)
-  ANode(const ANode& x)
-    : NonUniformDegreeTreeNode(NULL),
-      m_type(x.m_type), /*m_id: skip*/ m_strct(x.m_strct)
-  {
-    zeroLinks();
-    // pass 2 to threaded_unique_id to keep lower bit clear for 
-    // HPCRUN_FMT_RetainIdFlag
-    threaded_unique_id(2);
-    MetricAccessor *ma = metric_accessor(this);
-    MetricAccessor *mb = metric_accessor(&x);
-    for (unsigned int i = mb->idx_ge(0); i < UINT_MAX; i = mb->idx_ge(i + 1))
-      ma->idx(i) = mb->c_idx(i);
-  }
-
   // --------------------------------------------------------
   // General data
   // --------------------------------------------------------
@@ -788,16 +773,6 @@ public:
   virtual ~ADynNode()
   { delete m_lip; }
    
-  // deep copy of internals (but without children)
-  ADynNode(const ADynNode& x)
-    : ANode(x),
-      m_cpId(x.m_cpId),
-      m_as_info(x.m_as_info),
-      m_lmId(x.m_lmId),
-      m_lmIP(x.m_lmIP), m_opIdx(x.m_opIdx),
-      m_lip(clone_lip(x.m_lip))
-  { }
-
   // -------------------------------------------------------
   // call path id
   // -------------------------------------------------------
@@ -1053,11 +1028,6 @@ public:
   virtual ~AProcNode()
   { }
    
-  // deep copy of internals (but without children)
-  AProcNode(const AProcNode& x)
-    : ANode(x)
-  { }
-
   // --------------------------------------------------------
   // Static structure for ProcFrm/Proc
   // --------------------------------------------------------
@@ -1167,11 +1137,6 @@ public:
   { }
 
   virtual ~ProcFrm()
-  { }
-
-  // shallow copy (in the sense the children are not copied)
-  ProcFrm(const ProcFrm& x)
-    : AProcNode(x)
   { }
 
 
