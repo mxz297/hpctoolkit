@@ -362,13 +362,9 @@ public:
     // HPCRUN_FMT_RetainIdFlag
   }
 
-  ANode(ANodeTy type,
-	ANode* parent, Struct::ACodeNode* strct, const Metric::IData& metrics)
-    : NonUniformDegreeTreeNode(parent),
-      m_type(type), m_id(threaded_unique_id(2)), m_strct(strct)
+  void
+  recordMetrics(const Metric::IData& metrics)
   {
-    // pass 2 to threaded_unique_id to keep lower bit clear for 
-    // HPCRUN_FMT_RetainIdFlag
     MetricAccessor *ma = metric_accessor(this);
     for (unsigned int i = 0; i < metrics.numMetrics(); ++i)
       ma->idx(i) = metrics.c_idx(i);
@@ -755,16 +751,6 @@ public:
 	   uint cpId, lush_assoc_info_t as_info,
 	   LoadMap::LMId_t lmId, VMA ip, ushort opIdx, lush_lip_t* lip)
     : ANode(type, parent, strct),
-      m_cpId(cpId),
-      m_as_info(as_info),
-      m_lmId(lmId), m_lmIP(ip), m_opIdx(opIdx), m_lip(lip)
-  { }
-
-  ADynNode(ANodeTy type, ANode* parent, Struct::ACodeNode* strct,
-	   uint cpId, lush_assoc_info_t as_info,
-	   LoadMap::LMId_t lmId, VMA ip, ushort opIdx, lush_lip_t* lip,
-	   const Metric::IData& metrics)
-    : ANode(type, parent, strct, metrics),
       m_cpId(cpId),
       m_as_info(as_info),
       m_lmId(lmId), m_lmIP(ip), m_opIdx(opIdx), m_lip(lip)
@@ -1260,11 +1246,9 @@ public:
 
   Call(ANode* parent,
        uint cpId, lush_assoc_info_t as_info,
-       LoadMap::LMId_t lmId, VMA ip, ushort opIdx, lush_lip_t* lip,
-       const Metric::IData& metrics)
+       LoadMap::LMId_t lmId, VMA ip, ushort opIdx, lush_lip_t* lip)
     : ADynNode(TyCall, parent, NULL,
-	       cpId, as_info, lmId, ip, opIdx, lip,
-	       metrics)
+	       cpId, as_info, lmId, ip, opIdx, lip)
   { }
   
   virtual ~Call()
@@ -1311,11 +1295,9 @@ class Stmt
 
   Stmt(ANode* parent,
        uint cpId, lush_assoc_info_t as_info,
-       LoadMap::LMId_t lmId, VMA ip, ushort opIdx, lush_lip_t* lip,
-       const Metric::IData& metrics)
+       LoadMap::LMId_t lmId, VMA ip, ushort opIdx, lush_lip_t* lip)
     : ADynNode(TyStmt, parent, NULL,
-	       cpId, as_info, lmId, ip, opIdx, lip,
-	       metrics)
+	       cpId, as_info, lmId, ip, opIdx, lip)
   { }
   
   virtual ~Stmt()

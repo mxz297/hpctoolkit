@@ -2184,8 +2184,8 @@ cct_makeNode(Prof::CallPath::Profile& prof,
   Prof::CCT::ADynNode* n_leaf = NULL;
 
   if (hasMetrics || isLeaf) {
-    n = new CCT::Stmt(NULL, cpId, nodeFmt.as_info, lmId, lmIP, opIdx, lip,
-		      metricData);
+    n = new CCT::Stmt(NULL, cpId, nodeFmt.as_info, lmId, lmIP, opIdx, lip);
+    n->recordMetrics(metricData);
   }
 
   if (!isLeaf) {
@@ -2200,11 +2200,14 @@ cct_makeNode(Prof::CallPath::Profile& prof,
       lush_lip_t* lipCopy = CCT::ADynNode::clone_lip(lip);
 
       n = new CCT::Call(NULL, cpId0, nodeFmt.as_info, lmId, lmIP, opIdx,
-			lipCopy, metricData0);
+			lipCopy);
+      n->recordMetrics(metricData0);
+
     }
     else {
       n = new CCT::Call(NULL, cpId, nodeFmt.as_info, lmId, lmIP, opIdx,
-			lip, metricData);
+			lip);
+      n->recordMetrics(metricData);
     }
   }
 
