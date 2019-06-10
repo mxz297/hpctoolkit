@@ -394,25 +394,6 @@ public:
       ma->idx(i) = mb->c_idx(i);
   }
 
-  // deep copy of internals (but without children)
-  ANode&
-  operator=(const ANode& x)
-  {
-    if (this != &x) {
-      //NonUniformDegreeTreeNode::operator=(x);
-      m_type = x.m_type;
-      // m_id: skip
-      m_strct = x.m_strct;
-      s_allMetrics.erase(this);
-      MetricAccessor *ma = metric_accessor(this);
-      MetricAccessor *mb = metric_accessor(&x);
-      for (unsigned int i = mb->idx_ge(0); i < UINT_MAX; i = mb->idx_ge(i + 1))
-	ma->idx(i) = mb->c_idx(i);
-    }
-    return *this;
-  }
-
-
   // --------------------------------------------------------
   // General data
   // --------------------------------------------------------
@@ -817,24 +798,6 @@ public:
       m_lip(clone_lip(x.m_lip))
   { }
 
-  // deep copy of internals (but without children)
-  ADynNode&
-  operator=(const ADynNode& x)
-  {
-    if (this != &x) {
-      ANode::operator=(x);
-      m_cpId = x.m_cpId;
-      m_as_info = x.m_as_info;
-      m_lmId = x.m_lmId;
-      m_lmIP = x.m_lmIP;
-      m_opIdx = x.m_opIdx;
-      delete m_lip;
-      m_lip = clone_lip(x.m_lip);
-    }
-    return *this;
-  }
-
-
   // -------------------------------------------------------
   // call path id
   // -------------------------------------------------------
@@ -1094,17 +1057,6 @@ public:
   AProcNode(const AProcNode& x)
     : ANode(x)
   { }
-
-  // deep copy of internals (but without children)
-  AProcNode&
-  operator=(const AProcNode& x)
-  {
-    if (this != &x) {
-      ANode::operator=(x);
-    }
-    return *this;
-  }
-
 
   // --------------------------------------------------------
   // Static structure for ProcFrm/Proc
@@ -1403,15 +1355,6 @@ class Stmt
   
   virtual ~Stmt()
   { }
-
-  Stmt&
-  operator=(const Stmt& x)
-  {
-    if (this != &x) {
-      ADynNode::operator=(x);
-    }
-    return *this;
-  }
 
   // Dump contents for inspection
   virtual std::string
