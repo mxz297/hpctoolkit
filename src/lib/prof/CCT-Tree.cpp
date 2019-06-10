@@ -381,6 +381,8 @@ const string ANode::NodeNames[ANode::TyNUMBER] = {
 };
 
 
+std::map<const ANode*,MetricAccessor *> ANode::s_allMetrics;
+
 const string&
 ANode::ANodeTyToName(ANodeTy tp)
 {
