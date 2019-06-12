@@ -161,8 +161,9 @@ Tree::~Tree()
 }
 
 
+
 MergeEffectList*
-Tree::merge(const Tree* y, uint x_newMetricBegIdx, uint mrgFlag, uint oFlag)
+Tree::merge(const Tree* y, CallPath::Profile& prof, uint x_newMetricBegIdx, uint mrgFlag, uint oFlag)
 {
   Tree* x = this;
   ANode* x_root = root();
@@ -206,7 +207,7 @@ Tree::merge(const Tree* y, uint x_newMetricBegIdx, uint mrgFlag, uint oFlag)
   m_mergeCtxt->flags(mrgFlag);
   
   MergeEffectList* mrgEffects =
-    x_root->mergeDeep(y_root, x_newMetricBegIdx, *m_mergeCtxt, oFlag);
+    x_root->mergeDeep(y_root, prof, x_newMetricBegIdx, *m_mergeCtxt, oFlag);
 
   DIAG_If(0 /*public diag level*/) {
     verifyUniqueCPIds();
@@ -216,9 +217,8 @@ Tree::merge(const Tree* y, uint x_newMetricBegIdx, uint mrgFlag, uint oFlag)
 }
 
 
-
 MergeEffectList*
-Tree::match(const Tree* y, uint x_newMetricBegIdx, uint mrgFlag, uint oFlag)
+Tree::match(const Tree* y, CallPath::Profile& prof, uint x_newMetricBegIdx, uint mrgFlag, uint oFlag)
 {
   ANode* x_root = root();
   ANode* y_root = y->root();
@@ -263,7 +263,7 @@ Tree::match(const Tree* y, uint x_newMetricBegIdx, uint mrgFlag, uint oFlag)
   x_root->id(y_root->id());
   
   MergeEffectList* mrgEffects =
-    x_root->matchDeep(y_root, x_newMetricBegIdx, *m_mergeCtxt, oFlag);
+    x_root->matchDeep(y_root, prof, x_newMetricBegIdx, *m_mergeCtxt, oFlag);
 
 #if 0
   DIAG_If(0 /*public diag level*/) {
@@ -271,7 +271,7 @@ Tree::match(const Tree* y, uint x_newMetricBegIdx, uint mrgFlag, uint oFlag)
   }
 #endif
 
-  x_root->matchMerge();
+  x_root->matchMerge(prof);
 
   return mrgEffects;
 }
@@ -337,28 +337,28 @@ Tree::verifyUniqueCPIds()
 
 
 std::ostream&
-Tree::writeXML(std::ostream& os, uint metricBeg, uint metricEnd,
+Tree::writeXML(CallPath::Profile& prof, std::ostream& os, uint metricBeg, uint metricEnd,
 	       uint oFlags) const
 {
   if (m_root) {
-    m_root->writeXML(os, metricBeg, metricEnd, oFlags);
+    m_root->writeXML(prof, os, metricBeg, metricEnd, oFlags);
   }
   return os;
 }
 
 
 std::ostream& 
-Tree::dump(std::ostream& os, uint oFlags) const
+Tree::dump(CallPath::Profile& prof, std::ostream& os, uint oFlags) const
 {
-  writeXML(os, Metric::IData::npos, Metric::IData::npos, oFlags);
+  writeXML(prof, os, Metric::IData::npos, Metric::IData::npos, oFlags);
   return os;
 }
 
 
 void 
-Tree::ddump() const
+Tree::ddump(CallPath::Profile& prof) const
 {
-  dump(std::cerr, Tree::OFlg_DebugAll);
+  dump(prof, std::cerr, Tree::OFlg_DebugAll);
 }
 
 
@@ -380,8 +380,6 @@ const string ANode::NodeNames[ANode::TyNUMBER] = {
   "Root", "PF", "Pr", "L", "C", "S", "Any"
 };
 
-
-std::map<const ANode*,MetricAccessor *> ANode::s_allMetrics;
 
 const string&
 ANode::ANodeTyToName(ANodeTy tp)
@@ -500,7 +498,7 @@ ANode::ancestorStmt() const
 //***************************************************************************
 
 void
-ANode::zeroMetricsDeep(uint mBegId, uint mEndId)
+ANode::zeroMetricsDeep(CallPath::Profile& prof, uint mBegId, uint mEndId)
 {
   if ( !(mBegId < mEndId) ) {
     return; // short circuit
@@ -508,7 +506,7 @@ ANode::zeroMetricsDeep(uint mBegId, uint mEndId)
 
   for (ANodeIterator it(this); it.Current(); ++it) {
     ANode* n = it.current();
-    MetricAccessor *ma = CCT::ANode::metric_accessor(n);
+    MetricAccessor *ma = prof.metric_accessor(n);
     for (unsigned int i = ma->idx_ge(mBegId); i < mEndId; i = ma->idx_ge(i+1))
       ma->idx(i) = 0.;
   }
@@ -516,19 +514,19 @@ ANode::zeroMetricsDeep(uint mBegId, uint mEndId)
 
 
 void
-ANode::aggregateMetricsIncl(uint mBegId, uint mEndId)
+ANode::aggregateMetricsIncl(CallPath::Profile& prof, uint mBegId, uint mEndId)
 {
   VMAIntervalSet ivalset; // TODO: cheat using a VMAInterval set
   for (uint mId = mBegId; mId < mEndId; ++mId) {
     ivalset.insert(VMAInterval(mId, mId + 1)); // [ )
   }
-  aggregateMetricsIncl(ivalset);
+  aggregateMetricsIncl(prof, ivalset);
 }
 
 void
-ANode::aggregateMetricsIncl(const VMAIntervalSet& ivalset)
+ANode::aggregateMetricsIncl(CallPath::Profile& prof, const VMAIntervalSet& ivalset)
 {
-  TreeMetricAccessorInband tmai;
+  TreeMetricAccessorInband tmai(prof);
   aggregateMetricsIncl(ivalset, tmai);
 }
 
@@ -550,11 +548,11 @@ ANode::aggregateMetricsIncl(const VMAIntervalSet& ivalset, TreeMetricAccessor &t
 	   it1 != ivalset.end(); ++it1) {
 	const VMAInterval& ival = *it1;
 	uint mBegId = (uint)ival.beg(), mEndId = (uint)ival.end();
-	MetricAccessor *ma = CCT::ANode::metric_accessor(n);
+	MetricAccessor *ma = tma.nodeMetricAccessor(n);
 
 	for (uint mId = ma->idx_ge(mBegId); mId < mEndId; mId = ma->idx_ge(mId+1)) {
 	  double mVal = ma->c_idx(mId);
-	  CCT::ANode::metric_accessor(n_parent)->idx(mId) += mVal;
+	  tma.nodeMetricAccessor(n_parent)->idx(mId) += mVal;
 	}
       }
     }
@@ -563,19 +561,19 @@ ANode::aggregateMetricsIncl(const VMAIntervalSet& ivalset, TreeMetricAccessor &t
 
 
 void
-ANode::aggregateMetricsExcl(uint mBegId, uint mEndId)
+ANode::aggregateMetricsExcl(CallPath::Profile& prof, uint mBegId, uint mEndId)
 {
   VMAIntervalSet ivalset; // TODO: cheat using a VMAInterval set
   for (uint mId = mBegId; mId < mEndId; ++mId) {
     ivalset.insert(VMAInterval(mId, mId + 1)); // [ )
   }
-  aggregateMetricsExcl(ivalset);
+  aggregateMetricsExcl(prof, ivalset);
 }
 
 void
-ANode::aggregateMetricsExcl(const VMAIntervalSet& ivalset)
+ANode::aggregateMetricsExcl(CallPath::Profile& prof, const VMAIntervalSet& ivalset)
 {
-  TreeMetricAccessorInband tmai;
+  TreeMetricAccessorInband tmai(prof);
   aggregateMetricsExcl(ivalset, tmai);
 }
 
@@ -667,10 +665,10 @@ ANode::aggregateMetricsExcl(AProcNode* frame, const VMAIntervalSet& ivalset, Tre
 
 
 void
-ANode::computeMetrics(const Metric::Mgr& mMgr, uint mBegId, uint mEndId,
+ANode::computeMetrics(const Metric::Mgr& mMgr, CallPath::Profile& prof, uint mBegId, uint mEndId,
 		      bool doFinal)
 {
-  TreeMetricAccessorInband tmai;
+  TreeMetricAccessorInband tmai(prof);
   computeMetrics(mMgr, tmai, mBegId, mEndId, doFinal);
 }
 
@@ -697,8 +695,6 @@ void
 ANode::computeMetricsMe(const Metric::Mgr& mMgr, TreeMetricAccessor &tma, uint mBegId, uint mEndId,
 			bool doFinal)
 {
-  MetricAccessorInterval mda(*dynamic_cast<MetricAccessorInterval *>(Prof::CCT::ANode::metric_accessor(this)));
-
   for (uint mId = mBegId; mId < mEndId; ++mId) {
     const Metric::ADesc* m = mMgr.metric(mId);
     const Metric::DerivedDesc* mm = dynamic_cast<const Metric::DerivedDesc*>(m);
@@ -765,7 +761,7 @@ ANode::computeMetricsIncrMe(const Metric::Mgr& mMgr, TreeMetricAccessor &tma, ui
 
 
 void
-ANode::pruneByMetrics(const Metric::Mgr& mMgr, const VMAIntervalSet& ivalset,
+ANode::pruneByMetrics(const Metric::Mgr& mMgr, CallPath::Profile& prof, const VMAIntervalSet& ivalset,
 		      const ANode* root, double thresholdPct,
 		      uint8_t* prunedNodes)
 {
@@ -792,9 +788,9 @@ ANode::pruneByMetrics(const Metric::Mgr& mMgr, const VMAIntervalSet& ivalset,
 	}
 	numIncl++;
 	
-	double total = metric_accessor((const ANode*)root)->c_idx(mId); // root->metric(m->partner());
+	double total = prof.metric_accessor((const ANode*)root)->c_idx(mId); // root->metric(m->partner());
 	
-	double pct = metric_accessor(x)->c_idx(mId) * 100 / total;
+	double pct = prof.metric_accessor(x)->c_idx(mId) * 100 / total;
 	if (pct >= thresholdPct) {
 	  isImportant = true;
 	  break;
@@ -807,7 +803,7 @@ ANode::pruneByMetrics(const Metric::Mgr& mMgr, const VMAIntervalSet& ivalset,
     // 
     // ----------------------------------------------------------
     if (isImportant || numIncl == 0) {
-      x->pruneByMetrics(mMgr, ivalset, root, thresholdPct, prunedNodes);
+      x->pruneByMetrics(mMgr, prof, ivalset, root, thresholdPct, prunedNodes);
     }
     else {
       deleteChaff(x, prunedNodes);
@@ -898,7 +894,7 @@ ANode::deleteChaff(ANode* x, uint8_t* deletedNodes)
 //**********************************************************************
 
 MergeEffectList*
-ANode::mergeDeep(ANode* y, uint x_newMetricBegIdx, MergeContext& mrgCtxt,
+ANode::mergeDeep(ANode* y, CallPath::Profile& prof, uint x_newMetricBegIdx, MergeContext& mrgCtxt,
 		 uint oFlag)
 {
   ANode* x = this;
@@ -947,7 +943,7 @@ ANode::mergeDeep(ANode* y, uint x_newMetricBegIdx, MergeContext& mrgCtxt,
 		   << y_child->toStringMe(Tree::OFlg_Debug));
 	y_child->unlink();
   
-	effctLst1 = y_child->mergeDeep_fixInsert(x_newMetricBegIdx, mrgCtxt);
+	effctLst1 = y_child->mergeDeep_fixInsert(prof, x_newMetricBegIdx, mrgCtxt);
 
 	y_child->link(x);
       }
@@ -959,12 +955,12 @@ ANode::mergeDeep(ANode* y, uint x_newMetricBegIdx, MergeContext& mrgCtxt,
 		 << "  x: " << x_child_dyn->toStringMe(Tree::OFlg_Debug)
 		 << "\n  y: " << y_child_dyn->toStringMe(Tree::OFlg_Debug));
       MergeEffect effct =
-	x_child_dyn->mergeMe(*y_child_dyn, &mrgCtxt, x_newMetricBegIdx);
+	x_child_dyn->mergeMe(*y_child_dyn, prof, &mrgCtxt, x_newMetricBegIdx);
       if (mrgCtxt.doPropagateEffects() && !effct.isNoop()) {
 	effctLst->push_back(effct);
       }
       
-      effctLst1 = x_child_dyn->mergeDeep(y_child, x_newMetricBegIdx, mrgCtxt,
+      effctLst1 = x_child_dyn->mergeDeep(y_child, prof, x_newMetricBegIdx, mrgCtxt,
 					 oFlag);
     }
 
@@ -979,13 +975,13 @@ ANode::mergeDeep(ANode* y, uint x_newMetricBegIdx, MergeContext& mrgCtxt,
 }
 
 void
-ANode::mergeNodes(ANode* from)
+ANode::mergeNodes(CallPath::Profile& prof, ANode* from)
 {
   ANode* to = this;
   
   // augment "to"'s metrics with those of "from" 
-  MetricAccessor *us = metric_accessor(to);
-  MetricAccessor *them = metric_accessor(from);
+  MetricAccessor *us = prof.metric_accessor(to);
+  MetricAccessor *them = prof.metric_accessor(from);
   for (uint i = them->idx_ge(0); i < UINT_MAX; i = them->idx_ge(i+1)) {
     us->idx(i) += them->c_idx(i);
   }
@@ -1004,7 +1000,7 @@ ANode::mergeNodes(ANode* from)
 }
 
 void
-ANode::mergeChildren()
+ANode::mergeChildren(CallPath::Profile& prof)
 {
   std::map<uint, ANode *> originals;
   for (ANodeChildIterator it(this); it.Current(); /* */) {
@@ -1013,7 +1009,7 @@ ANode::mergeChildren()
     auto found = originals.find(child->id());
     if (found != originals.end()) {
       ANode *original = found->second;
-      original->mergeNodes(child);
+      original->mergeNodes(prof, child);
     } else {
       originals[child->id()] = child;
     }
@@ -1021,19 +1017,19 @@ ANode::mergeChildren()
 }
 
 void
-ANode::matchMerge()
+ANode::matchMerge(CallPath::Profile& prof)
 {
-  mergeChildren();
+  mergeChildren(prof);
   for (ANodeChildIterator it(this); it.Current(); /* */) {
     ANode* child = it.current();
     it++; // advance iterator
-    child->matchMerge();
+    child->matchMerge(prof);
   }
 }
 
 
 MergeEffectList*
-ANode::matchDeep(ANode* y, uint x_newMetricBegIdx, MergeContext& mrgCtxt,
+ANode::matchDeep(ANode* y, CallPath::Profile& prof, uint x_newMetricBegIdx, MergeContext& mrgCtxt,
 		 uint oFlag)
 {
   MergeEffectList* effctLst = new MergeEffectList;
@@ -1065,7 +1061,7 @@ ANode::matchDeep(ANode* y, uint x_newMetricBegIdx, MergeContext& mrgCtxt,
 	continue;
       }
       
-      effctLst1 = x_child_dyn->matchDeep(y_child_dyn, 
+      effctLst1 = x_child_dyn->matchDeep(y_child_dyn,  prof,
 					 x_newMetricBegIdx, mrgCtxt,
 					 oFlag);
 
@@ -1102,12 +1098,12 @@ ANode::matchDeep(ANode* y, uint x_newMetricBegIdx, MergeContext& mrgCtxt,
 }
 
 MergeEffect
-ANode::merge(ANode* y)
+ANode::merge(CallPath::Profile& prof, ANode* y)
 {
   ANode* x = this;
   
   // 1. copy y's metrics into x
-  MergeEffect effct = x->mergeMe(*y);
+  MergeEffect effct = x->mergeMe(*y, prof);
   
   // 2. copy y's children into x
   for (ANodeChildIterator it(y); it.Current(); /* */) {
@@ -1125,11 +1121,11 @@ ANode::merge(ANode* y)
 
 
 MergeEffect
-ANode::mergeMe(const ANode& y, MergeContext* GCC_ATTR_UNUSED mrgCtxt,
+ANode::mergeMe(const ANode& y, CallPath::Profile& prof, MergeContext* GCC_ATTR_UNUSED mrgCtxt,
 	       uint metricBegIdx, bool mayConflict)
 {
-  MetricAccessor *me = metric_accessor(this);
-  MetricAccessor *they = metric_accessor(&y);
+  MetricAccessor *me = prof.metric_accessor(this);
+  MetricAccessor *they = prof.metric_accessor(&y);
   
   for (uint y_i = they->idx_ge(0); y_i < UINT_MAX; y_i = they->idx_ge(y_i + 1))
     me->idx(metricBegIdx + y_i) += they->c_idx(y_i);
@@ -1153,7 +1149,7 @@ ANode::matchMe(const ANode& y, MergeContext* GCC_ATTR_UNUSED mrgCtxt,
 
 
 MergeEffect
-ADynNode::mergeMe(const ANode& y, MergeContext* mrgCtxt, uint metricBegIdx, bool mayConflict)
+ADynNode::mergeMe(const ANode& y, CallPath::Profile& prof, MergeContext* mrgCtxt, uint metricBegIdx, bool mayConflict)
 {
   // N.B.: Assumes ADynNode::isMergable() holds
   ADynNode* x = this;
@@ -1161,7 +1157,7 @@ ADynNode::mergeMe(const ANode& y, MergeContext* mrgCtxt, uint metricBegIdx, bool
   const ADynNode* y_dyn = dynamic_cast<const ADynNode*>(&y);
   DIAG_Assert(y_dyn, "ADynNode::mergeMe: " << DIAG_UnexpectedInput);
 
-  MergeEffect effct = ANode::mergeMe(y, mrgCtxt, metricBegIdx);
+  MergeEffect effct = ANode::mergeMe(y, prof, mrgCtxt, metricBegIdx);
 
   // merge cp-ids
   if (hasMergeEffects(*x, *y_dyn)) {
@@ -1255,7 +1251,7 @@ ANode::findDynChild(const ADynNode& y_dyn)
 }
 
 MergeEffectList*
-ANode::mergeDeep_fixInsert(int newMetrics, MergeContext& mrgCtxt)
+ANode::mergeDeep_fixInsert(CallPath::Profile& prof, int newMetrics, MergeContext& mrgCtxt)
 {
   // Assumes: While merging CCT::Tree y into CCT::Tree x, subtree
   // 'this', which used to live in 'y', has just been inserted into
@@ -1284,7 +1280,7 @@ ANode::mergeDeep_fixInsert(int newMetrics, MergeContext& mrgCtxt)
     // -----------------------------------------------------
     // 2. Make space for the metrics of CCT::Tree x
     // -----------------------------------------------------
-    MetricAccessor *ma = CCT::ANode::metric_accessor(n);
+    MetricAccessor *ma = prof.metric_accessor(n);
     ma->shift_indices(newMetrics);
   }
   
@@ -1360,10 +1356,10 @@ ProcFrm::procNameDbg() const
 //**********************************************************************
 
 string 
-ANode::toString(uint oFlags, const char* pfx) const
+ANode::toString(CallPath::Profile& prof, uint oFlags, const char* pfx) const
 {
   std::ostringstream os;
-  writeXML(os, Metric::IData::npos, Metric::IData::npos, oFlags, pfx);
+  writeXML(prof, os, Metric::IData::npos, Metric::IData::npos, oFlags, pfx);
   return os.str();
 }
 
@@ -1426,7 +1422,7 @@ ADynNode::nameDyn() const
 
 
 void
-ADynNode::writeDyn(std::ostream& o, uint GCC_ATTR_UNUSED oFlags,
+ADynNode::writeDyn(std::ostream& o, CallPath::Profile& prof, uint GCC_ATTR_UNUSED oFlags,
 		   const char* pfx) const
 {
   string p(pfx);
@@ -1438,7 +1434,7 @@ ADynNode::writeDyn(std::ostream& o, uint GCC_ATTR_UNUSED oFlags,
     << hex << m_lip << " [lip " << lip_str() << "]" << dec;
 
   o << p << " [metrics";
-  MetricAccessor *me = metric_accessor(this);
+  MetricAccessor *me = prof.metric_accessor(this);
   for (uint i = me->idx_ge(0); i < UINT_MAX; i = me->idx_ge(i+1)) {
     o << " " << i << ":" << me->c_idx(i);
   }
@@ -1456,7 +1452,7 @@ Root::toStringMe(uint oFlags) const
 
 //**********************************************************************
 // Goal: This function is to avoid using different ID for the same file name.
-// During the writing of file dictionary table (see CallPath-Profile.cpp)
+// During the writing of file dictionary table (see CallPath-CallPath::Profile.cpp)
 // 	if a file has the exact absolute name with a previous file, 
 //	then we redirect its ID to the existing ID
 //
@@ -1624,7 +1620,7 @@ Stmt::toStringMe(uint oFlags) const
 
 
 std::ostream&
-ANode::writeXML(ostream& os, uint metricBeg, uint metricEnd,
+ANode::writeXML(CallPath::Profile& prof, ostream& os, uint metricBeg, uint metricEnd,
 		uint oFlags, const char* pfx) const
 {
   string indent = "  ";
@@ -1633,12 +1629,12 @@ ANode::writeXML(ostream& os, uint metricBeg, uint metricEnd,
     indent = "";
   }
   
-  bool doPost = writeXML_pre(os, metricBeg, metricEnd, oFlags, pfx);
+  bool doPost = writeXML_pre(prof, os, metricBeg, metricEnd, oFlags, pfx);
   string prefix = pfx + indent;
   for (ANodeSortedChildIterator it(this, ANodeSortedIterator::cmpByStructureInfo);
        it.current(); it++) {
     ANode* n = it.current();
-    n->writeXML(os, metricBeg, metricEnd, oFlags, prefix.c_str());
+    n->writeXML(prof, os, metricBeg, metricEnd, oFlags, prefix.c_str());
   }
   if (doPost) {
     writeXML_post(os, oFlags, pfx);
@@ -1648,7 +1644,7 @@ ANode::writeXML(ostream& os, uint metricBeg, uint metricEnd,
 
 
 std::ostream&
-ANode::writeXML_path(ostream& os, uint metricBeg, uint metricEnd,
+ANode::writeXML_path(CallPath::Profile& prof, ostream& os, uint metricBeg, uint metricEnd,
 		     uint oFlags, const char* pfx) const
 {
   string indent = "  ";
@@ -1659,34 +1655,34 @@ ANode::writeXML_path(ostream& os, uint metricBeg, uint metricEnd,
 
   ANode *parent = this->parent();
   if (parent) {
-    parent->writeXML_path(os, metricBeg, metricEnd, oFlags, pfx);
+    parent->writeXML_path(prof, os, metricBeg, metricEnd, oFlags, pfx);
   }
   
-  writeXML_pre(os, metricBeg, metricEnd, oFlags, pfx);
+  writeXML_pre(prof, os, metricBeg, metricEnd, oFlags, pfx);
   return os;
 }
 
 
 std::ostream&
-ANode::dump(ostream& os, uint oFlags, const char* pfx) const 
+ANode::dump(CallPath::Profile& prof, ostream& os, uint oFlags, const char* pfx) const 
 {
-  writeXML(os, Metric::IData::npos, Metric::IData::npos, oFlags, pfx); 
+  writeXML(prof, os, Metric::IData::npos, Metric::IData::npos, oFlags, pfx); 
   return os;
 }
 
 
 void
-ANode::adump() const
+ANode::adump(CallPath::Profile& prof) const
 {
-  writeXML_path(std::cerr, Metric::IData::npos, Metric::IData::npos,
+  writeXML_path(prof, std::cerr, Metric::IData::npos, Metric::IData::npos,
 	        Tree::OFlg_DebugAll, "");
 } 
 
 
 void
-ANode::ddump() const
+ANode::ddump(CallPath::Profile& prof) const
 {
-  writeXML(std::cerr, Metric::IData::npos, Metric::IData::npos,
+  writeXML(prof, std::cerr, Metric::IData::npos, Metric::IData::npos,
 	   Tree::OFlg_DebugAll, "");
 } 
 
@@ -1700,11 +1696,11 @@ ANode::ddumpMe() const
 
 
 bool
-ANode::writeXML_pre(ostream& os, uint metricBeg, uint metricEnd,
+ANode::writeXML_pre(CallPath::Profile& prof, ostream& os, uint metricBeg, uint metricEnd,
 		    uint oFlags, const char* pfx) const
 {
   bool doTag = (type() != TyRoot);
-  bool doMetrics = hasMetrics(this) &&
+  bool doMetrics = prof.hasMetrics(this) &&
     (isLeaf() || !(oFlags & Tree::OFlg_LeafMetricsOnly));
   bool isXMLLeaf = isLeaf() && !doMetrics;
 
@@ -1725,7 +1721,7 @@ ANode::writeXML_pre(ostream& os, uint metricBeg, uint metricEnd,
       metricEnd = UINT_MAX;
     }
     os << pfx;
-    MetricAccessor *me = metric_accessor(this);
+    MetricAccessor *me = prof.metric_accessor(this);
     for (unsigned i = me->idx_ge(metricBeg); i < metricEnd; i = me->idx_ge(i + 1))
       os << "<M n" << xml::MakeAttrNum(i) 
 	 << " v" << xml::MakeAttrNum(me->c_idx(i)) << "/>";
@@ -1774,6 +1770,27 @@ int ANodeLineComp(ANode* x, ANode* y)
     return SrcFile::compare(x->begLine(), y->begLine());
   }
 }
+
+  TreeMetricAccessorInband::TreeMetricAccessorInband(CallPath::Profile& prof)
+    :prof(prof) {}
+  double &TreeMetricAccessorInband::index(ANode *n, uint metricId, uint size) {
+    MetricAccessor *ma = prof.metric_accessor(n);
+    return ma->idx(metricId, size);
+  }
+  double TreeMetricAccessorInband::c_index(ANode *n, uint metricId) {
+    MetricAccessor *ma = prof.metric_accessor(n);
+    return ma->c_idx(metricId);
+  }
+  unsigned int TreeMetricAccessorInband::idx_ge(ANode *n, uint metricId) {
+    MetricAccessor *ma = prof.metric_accessor(n);
+    return ma->idx_ge(metricId);
+  }
+  MetricAccessor *TreeMetricAccessorInband::nodeMetricAccessor(ANode *n) {
+    MetricAccessor *ma = prof.metric_accessor(n);
+    return new MetricAccessorInband(ma); 
+  };
+
+
 
 
 } // namespace CCT

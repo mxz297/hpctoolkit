@@ -349,10 +349,10 @@ public:
   //std::ostream& writeXML_cct(...) const;
 
   std::ostream&
-  dump(std::ostream& os = std::cerr) const;
+  dump(Prof::CallPath::Profile& prof, std::ostream& os = std::cerr) const;
 
   void
-  ddump() const;
+  ddump(Prof::CallPath::Profile& prof) const;
 
   static const int StructMetricIdFlg = 0;
 
@@ -395,6 +395,38 @@ private:
   Prof::Struct::Tree* m_structure;
  
   bool m_remove_redundancy;
+
+  std::map<const CCT::ANode*,MetricAccessor*> m_metrics;
+
+public:
+  bool hasMetrics(const CCT::ANode *n)
+  {
+    std::map<const CCT::ANode*, MetricAccessor*>::iterator item = m_metrics.find(n);
+    return (item != m_metrics.end() &&
+	    !item->second->empty());
+  }
+
+  MetricAccessor *metric_accessor(const CCT::ANode *n)
+  {
+    std::map<const CCT::ANode*, MetricAccessor*>::iterator item = m_metrics.find(n);
+    if (item == m_metrics.end() || item->second->empty())
+      m_metrics.insert(std::pair<const CCT::ANode*,MetricAccessorInterval*>(n,new MetricAccessorInterval));
+    return (m_metrics.find(n)->second);
+  }
+
+  MetricAccessor *metric_accessor(const CCT::ANode *n) const
+  {
+    std::map<const CCT::ANode*, MetricAccessor*>::const_iterator item = m_metrics.find(n);
+    if (item == m_metrics.end() || item->second->empty())
+      return NULL;
+    return (item->second);
+  }
+
+  void recordMetrics(const CCT::ANode *n, const Metric::IData& metrics) {
+    MetricAccessor *ma = metric_accessor(n);
+    for (unsigned int i = 0; i < metrics.numMetrics(); ++i)
+      ma->idx(i) = metrics.c_idx(i);
+  }
 };
 
 } // namespace CallPath

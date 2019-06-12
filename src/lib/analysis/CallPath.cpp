@@ -731,23 +731,13 @@ makeFrameStructure(Prof::CCT::ANode* node_frame,
 
 //***************************************************************************
 
-static void
-coalesceStmts(Prof::CCT::ANode* node);
-
-static void
-coalesceStmts(Prof::CallPath::Profile& prof)
-{
-  coalesceStmts(prof.cct()->root());
-}
-
-
 // coalesceStmts: After static structure has been overlayed,
 // CCT::Stmt's live within a procedure frame (alien or native).
 // However, leaf nodes (CCT::Stmt) are still distinct according to
 // instruction pointer.  Group CCT::Stmts within the same scope by
 // line (or structure).
 void
-coalesceStmts(Prof::CCT::ANode* node)
+coalesceStmts(Prof::CallPath::Profile& prof, Prof::CCT::ANode* node)
 {
   typedef std::map<SrcFile::ln, Prof::CCT::Stmt*> LineToStmtMap;
 
@@ -802,7 +792,7 @@ coalesceStmts(Prof::CCT::ANode* node)
 	// to the same source template or multiple stripped functions
 	// mapping to UnknownProcNm).
 	if (! Prof::CCT::ADynNode::hasMergeEffects(*n_stmtOrig, *n_stmt)) {
-	  Prof::CCT::MergeEffect effct = n_stmtOrig->mergeMe(*n_stmt, /*MergeContext=*/ NULL,/*metricBegIdx=*/ 0, /*mayConflict=*/ false);
+	  Prof::CCT::MergeEffect effct = n_stmtOrig->mergeMe(*n_stmt, prof, /*MergeContext=*/ NULL,/*metricBegIdx=*/ 0, /*mayConflict=*/ false);
 	  DIAG_Assert(effct.isNoop(), "Analysis::CallPath::coalesceStmts: trace ids lost (" << effct.toString() << ") when merging y into x:\n"
 		      << "\tx: " << n_stmtOrig->toStringMe(Prof::CCT::Tree::OFlg_Debug) << "\n"
 		      << "\ty: " << n_stmt->toStringMe(Prof::CCT::Tree::OFlg_Debug));
@@ -819,13 +809,18 @@ coalesceStmts(Prof::CCT::ANode* node)
     }
     else if (!n->isLeaf()) {
       // Recur
-      coalesceStmts(n);
+      coalesceStmts(prof, n);
     }
   }
 
   delete stmtMap;
 }
 
+static void
+coalesceStmts(Prof::CallPath::Profile& prof)
+{
+  coalesceStmts(prof, prof.cct()->root());
+}
 
 //***************************************************************************
 // Normalizing the CCT
@@ -857,7 +852,7 @@ Analysis::CallPath::pruneBySummaryMetrics(Prof::CallPath::Profile& prof,
     }
   }
   
-  prof.cct()->root()->pruneByMetrics(*prof.metricMgr(), ivalset,
+  prof.cct()->root()->pruneByMetrics(*prof.metricMgr(), prof, ivalset,
 				     prof.cct()->root(), 0.001,
 				     prunedNodes);
 }
@@ -986,7 +981,7 @@ mergeCilkMain(Prof::CallPath::Profile& prof)
       it++; // advance iterator -- it is pointing at 'x'
       
       if (x->procName() == CilkNameMgr::cilkmain) {
-	mainFrm->merge(x); // deletes 'x'
+	mainFrm->merge(prof, x); // deletes 'x'
       }
     }
   }
@@ -1120,8 +1115,8 @@ makeReturnCountMetric(Prof::CallPath::Profile& prof)
       Prof::CCT::ANode* n_parent = n->parent();
       for (uint i = 0; i < retCntId.size(); ++i) {
 	uint mId = retCntId[i];
-	MetricAccessor *ma = Prof::CCT::ANode::metric_accessor(n);
-	Prof::CCT::ANode::metric_accessor(n_parent)->idx(mId) += ma->c_idx(mId);
+	MetricAccessor *ma = prof.metric_accessor(n);
+	prof.metric_accessor(n_parent)->idx(mId) += ma->c_idx(mId);
 	ma->idx(mId) = 0.0;
       }
     }
@@ -1231,7 +1226,7 @@ write(Prof::CallPath::Profile& prof, std::ostream& os,
   // 
   // ------------------------------------------------------------
   os << "<SecCallPathProfileData>\n";
-  prof.cct()->writeXML(os, metricBegId, metricEndId, oFlags);
+  prof.cct()->writeXML(prof, os, metricBegId, metricEndId, oFlags);
   os << "</SecCallPathProfileData>\n";
 
   os << "</SecCallPathProfile>\n";

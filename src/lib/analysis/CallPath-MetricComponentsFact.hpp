@@ -100,7 +100,7 @@ protected:
   void
   make(Prof::CCT::ANode* node,
        const std::vector<uint>& m_src, const std::vector<uint>& m_dst,
-       bool isSeparableCtxt);
+       Prof::CallPath::Profile &prof, bool isSeparableCtxt);
 
 
   static inline bool
@@ -147,6 +147,7 @@ private:
   // make imbalance and idleness metrics
   void
   makeMetrics(Prof::CCT::ANode* node,
+	      Prof::CallPath::Profile &prof,
 	      const std::vector<uint>& m_src,
 	      const std::vector<uint>& m_imbalIncl,
 	      const std::vector<uint>& m_imbalExcl,

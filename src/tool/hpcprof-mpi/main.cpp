@@ -978,8 +978,8 @@ makeSummaryMetrics_Lcl(Prof::CallPath::Profile& profGbl,
     }
   }
 
-  cctRootGbl->aggregateMetricsIncl(ivalsetIncl);
-  cctRootGbl->aggregateMetricsExcl(ivalsetExcl);
+  cctRootGbl->aggregateMetricsIncl(prof, ivalsetIncl);
+  cctRootGbl->aggregateMetricsExcl(prof, ivalsetExcl);
 
 
   // 2. Batch compute local derived metrics
@@ -1005,7 +1005,7 @@ makeSummaryMetrics_Lcl(Prof::CallPath::Profile& profGbl,
   // two; and (b) use a CCT init (which whould initialize using
   // assignment) instead of CCT::merge() (which initializes based on
   // addition against 0).
-  cctRootGbl->zeroMetricsDeep(mBeg, mEnd); // cf. FnInitSrc
+  cctRootGbl->zeroMetricsDeep(profGbl, mBeg, mEnd); // cf. FnInitSrc
   
   delete prof;
   }
@@ -1095,8 +1095,8 @@ makeThreadMetrics_Lcl(Prof::CallPath::Profile& profGbl,
   TreeMetricAccessorOutOfBand packedMetricsAccessor(packedMetrics);
   
   Prof::CCT::ANode* c_cct_root = profGbl.cct()->root(); // canonical cct root
-  c_cct_root->aggregateMetricsIncl(ivalsetIncl, packedMetricsAccessor);
-  c_cct_root->aggregateMetricsExcl(ivalsetExcl, packedMetricsAccessor);
+  c_cct_root->aggregateMetricsIncl(profGbl, ivalsetIncl, packedMetricsAccessor);
+  c_cct_root->aggregateMetricsExcl(profGbl, ivalsetExcl, packedMetricsAccessor);
   
 #if DEBUG_PACKED_METRICS
   packedMetrics.dump();

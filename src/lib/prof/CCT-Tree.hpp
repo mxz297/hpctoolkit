@@ -188,14 +188,14 @@ public:
   // Given a Tree, merge into 'this'
   // -------------------------------------------------------
   MergeEffectList*
-  merge(const Tree* y, uint x_newMetricBegIdx,
+  merge(const Tree* y, CallPath::Profile& prof, uint x_newMetricBegIdx,
 	uint mrgFlag = 0, uint oFlag = 0);
 
   // -------------------------------------------------------
   // Given a Tree, match 'this' with y
   // -------------------------------------------------------
   MergeEffectList*
-  match(const Tree* y, uint x_newMetricBegIdx,
+  match(const Tree* y, CallPath::Profile& prof, uint x_newMetricBegIdx,
 	uint mrgFlag = 0, uint oFlag = 0);
 
   // -------------------------------------------------------
@@ -239,16 +239,17 @@ public:
   // Write contents
   // -------------------------------------------------------
   std::ostream&
-  writeXML(std::ostream& os,
+  writeXML(CallPath::Profile& prof,
+	   std::ostream& os,
 	   uint metricBeg = Metric::IData::npos,
 	   uint metricEnd = Metric::IData::npos,
 	   uint oFlags = 0) const;
 
   std::ostream&
-  dump(std::ostream& os = std::cerr, uint oFlags = 0) const;
+  dump(CallPath::Profile& prof, std::ostream& os = std::cerr, uint oFlags = 0) const;
   
   void
-  ddump() const;
+  ddump(CallPath::Profile& prof) const;
 
 
   // Given a set of flags 'flags', determines whether we need to
@@ -331,29 +332,7 @@ public:
 private:
   static const std::string NodeNames[TyNUMBER];
 
-  static std::map<const ANode*,MetricAccessor*> s_allMetrics;
-
 public:
-  static bool hasMetrics(const ANode *n)
-  {
-    std::map<const ANode*, MetricAccessor*>::iterator item = s_allMetrics.find(n);
-    return (item != s_allMetrics.end() &&
-	    !item->second->empty());
-  }
-
-  static MetricAccessor *metric_accessor(const ANode *n)
-  {
-    if (!hasMetrics(n))
-      s_allMetrics.insert(std::pair<const ANode*,MetricAccessorInterval*>(n,new MetricAccessorInterval));
-#if 0
-    MetricAccessorInterval *mav = static_cast<MetricAccessorInterval*>(s_allMetrics.find(n)->second);
-    mav->dump();
-    return mav;
-#else
-    return (s_allMetrics.find(n)->second);
-#endif
-  }
-
   ANode(ANodeTy type, ANode* parent, Struct::ACodeNode* strct = NULL)
     : NonUniformDegreeTreeNode(parent),
       m_type(type), m_id(threaded_unique_id(2)), m_strct(strct)
@@ -362,17 +341,9 @@ public:
     // HPCRUN_FMT_RetainIdFlag
   }
 
-  void
-  recordMetrics(const Metric::IData& metrics)
-  {
-    MetricAccessor *ma = metric_accessor(this);
-    for (unsigned int i = 0; i < metrics.numMetrics(); ++i)
-      ma->idx(i) = metrics.c_idx(i);
-  }
 
   virtual ~ANode()
   {
-    s_allMetrics.erase(this);
   }
   
   // --------------------------------------------------------
@@ -494,39 +465,39 @@ public:
   // --------------------------------------------------------
 
   void
-  zeroMetricsDeep(uint mBegId, uint mEndId);
+  zeroMetricsDeep(CallPath::Profile& prof, uint mBegId, uint mEndId);
 
 
   // aggregateMetricsIncl: aggregates metrics for inclusive CCT
   // metrics. [mBegId, mEndId) forms an interval for batch processing.
   void
-  aggregateMetricsIncl(uint mBegId, uint mEndId);
+  aggregateMetricsIncl(CallPath::Profile& prof, uint mBegId, uint mEndId);
 
   void
-  aggregateMetricsIncl(const VMAIntervalSet& ivalset);
+  aggregateMetricsIncl(CallPath::Profile& prof, const VMAIntervalSet& ivalset);
 
   void
   aggregateMetricsIncl(const VMAIntervalSet& ivalset, TreeMetricAccessor &tma);
 
   void
-  aggregateMetricsIncl(uint mBegId)
-  { aggregateMetricsIncl(mBegId, mBegId + 1); }
+  aggregateMetricsIncl(CallPath::Profile& prof, uint mBegId)
+  { aggregateMetricsIncl(prof, mBegId, mBegId + 1); }
 
 
   // aggregateMetricsExcl: aggregates metrics for exclusive CCT
   // metrics. [mBegId, mEndId) forms an interval for batch processing.
   void
-  aggregateMetricsExcl(uint mBegId, uint mEndId);
+  aggregateMetricsExcl(CallPath::Profile& prof, uint mBegId, uint mEndId);
 
   void
-  aggregateMetricsExcl(const VMAIntervalSet& ivalset);
+  aggregateMetricsExcl(CallPath::Profile& prof, const VMAIntervalSet& ivalset);
 
   void
   aggregateMetricsExcl(const VMAIntervalSet& ivalset, TreeMetricAccessor &tma);
 
   void
-  aggregateMetricsExcl(uint mBegId)
-  { aggregateMetricsExcl(mBegId, mBegId + 1); }
+  aggregateMetricsExcl(CallPath::Profile& prof, uint mBegId)
+  { aggregateMetricsExcl(prof, mBegId, mBegId + 1); }
 
 private:
   //
@@ -544,7 +515,7 @@ public:
 
   // this one defaults to inband metrics in the tree
   void
-  computeMetrics(const Metric::Mgr& mMgr, uint mBegId, uint mEndId, bool doFinal);
+  computeMetrics(const Metric::Mgr& mMgr, CallPath::Profile& prof, uint mBegId, uint mEndId, bool doFinal);
 
   void
   computeMetrics(const Metric::Mgr& mMgr, TreeMetricAccessor &tma, uint mBegId, uint mEndId,
@@ -568,7 +539,7 @@ public:
 
   // pruneByMetrics: TODO: make this static for consistency
   void
-  pruneByMetrics(const Metric::Mgr& mMgr, const VMAIntervalSet& ivalset,
+  pruneByMetrics(const Metric::Mgr& mMgr, CallPath::Profile& prof, const VMAIntervalSet& ivalset,
 		 const ANode* root, double thresholdPct,
 		 uint8_t* prunedNodes = NULL);
 
@@ -600,29 +571,31 @@ public:
   // N.B.: assume we can destroy y.
   // N.B.: assume x already has space to store merged metrics
   std::list<MergeEffect>*
-  mergeDeep(ANode* y, uint x_numMetrics, MergeContext& mrgCtxt, uint oFlag = 0);
+  mergeDeep(ANode* y, CallPath::Profile& prof, uint x_numMetrics, MergeContext& mrgCtxt, uint oFlag = 0);
 
   std::list<MergeEffect>*
-  matchDeep(ANode* y, uint x_numMetrics, MergeContext& mrgCtxt, uint oFlag = 0);
+  matchDeep(ANode* y, CallPath::Profile& prof, uint x_numMetrics, MergeContext& mrgCtxt, uint oFlag = 0);
+
+
 
   void
-  mergeNodes(ANode *from);
+  mergeNodes(CallPath::Profile& prof, ANode *from);
 
   void
-  mergeChildren();
+  mergeChildren(CallPath::Profile& prof);
 
   void
-  matchMerge();
+  matchMerge(CallPath::Profile& prof);
 
   // merge: Let 'this' = x and let y be a node corresponding to x.
   //   Merge y into x.
   // N.B.: assume we can destroy y.
   MergeEffect
-  merge(ANode* y);
+  merge(CallPath::Profile& prof, ANode* y);
 
   
   virtual MergeEffect
-  mergeMe(const ANode& y, MergeContext* mrgCtxt = NULL, uint metricBegIdx = 0, bool mayConflict = true);
+  mergeMe(const ANode& y, CallPath::Profile& prof, MergeContext* mrgCtxt = NULL, uint metricBegIdx = 0, bool mayConflict = true);
 
   virtual MergeEffect
   matchMe(const ANode& y, MergeContext* mrgCtxt = NULL, uint metricBegIdx = 0, bool mayConflict = true);
@@ -655,32 +628,34 @@ public:
   // --------------------------------------------------------
 
   virtual std::string
-  toString(uint oFlags = 0, const char* pfx = "") const;
+  toString(CallPath::Profile& prof, uint oFlags = 0, const char* pfx = "") const;
 
   virtual std::string
   toStringMe(uint oFlags = 0) const;
 
   std::ostream&
-  writeXML(std::ostream& os,
+  writeXML(CallPath::Profile& prof,
+	   std::ostream& os,
 	   uint metricBeg = Metric::IData::npos,
 	   uint metricEnd = Metric::IData::npos,
 	   uint oFlags = 0, const char* pfx = "") const;
 
 
   std::ostream&
-  writeXML_path(std::ostream& os,
+  writeXML_path(CallPath::Profile& prof,
+	   std::ostream& os,
 	   uint metricBeg = Metric::IData::npos,
 	   uint metricEnd = Metric::IData::npos,
 	   uint oFlags = 0, const char* pfx = "") const;
 
   std::ostream&
-  dump(std::ostream& os = std::cerr, uint oFlags = 0, const char* pfx = "") const;
+  dump(CallPath::Profile& prof, std::ostream& os = std::cerr, uint oFlags = 0, const char* pfx = "") const;
 
   void
-  adump() const;
+  adump(CallPath::Profile& prof) const;
 
   void
-  ddump() const;
+  ddump(CallPath::Profile& prof) const;
 
   void
   ddumpMe() const;
@@ -691,7 +666,8 @@ public:
 protected:
 
   bool
-  writeXML_pre(std::ostream& os,
+  writeXML_pre(CallPath::Profile& prof,
+	       std::ostream& os,
 	       uint metricBeg = Metric::IData::npos,
 	       uint metricEnd = Metric::IData::npos,
 	       uint oFlags = 0,
@@ -705,7 +681,7 @@ protected:
   // --------------------------------------------------------
 
   MergeEffectList*
-  mergeDeep_fixInsert(int newMetrics, MergeContext& mrgCtxt);
+  mergeDeep_fixInsert(CallPath::Profile& prof, int newMetrics, MergeContext& mrgCtxt);
 
 
 #if 0
@@ -955,7 +931,7 @@ public:
 
 
   virtual MergeEffect
-  mergeMe(const ANode& y, MergeContext* mrgCtxt = NULL, uint metricBegIdx = 0, bool mayConflict = true);
+  mergeMe(const ANode& y, CallPath::Profile& prof, MergeContext* mrgCtxt = NULL, uint metricBegIdx = 0, bool mayConflict = true);
 
   virtual MergeEffect
   matchMe(const ANode& y, MergeContext* mrgCtxt = NULL, uint metricBegIdx = 0, bool mayConflict = true);
@@ -975,7 +951,7 @@ public:
   nameDyn() const;
 
   void
-  writeDyn(std::ostream& os, uint oFlags = 0, const char* prefix = "") const;
+  writeDyn(std::ostream& os, CallPath::Profile& prof, uint oFlags = 0, const char* prefix = "") const;
 
 
 private:
@@ -1310,23 +1286,13 @@ class Stmt
 
 
 class TreeMetricAccessorInband : public TreeMetricAccessor {
+  CallPath::Profile& prof;
 public:
-  virtual double &index(ANode *n, uint metricId, uint size = 0) {
-    MetricAccessor *ma = CCT::ANode::metric_accessor(n);
-    return ma->idx(metricId, size);
-  }
-  virtual double c_index(ANode *n, uint metricId) {
-    MetricAccessor *ma = CCT::ANode::metric_accessor(n);
-    return ma->c_idx(metricId);
-  }
-  virtual unsigned int idx_ge(ANode *n, uint metricId) {
-    MetricAccessor *ma = CCT::ANode::metric_accessor(n);
-    return ma->idx_ge(metricId);
-  }
-  virtual MetricAccessor *nodeMetricAccessor(ANode *n) {
-    MetricAccessor *ma = CCT::ANode::metric_accessor(n);
-    return new MetricAccessorInband(ma); 
-  };
+  TreeMetricAccessorInband(CallPath::Profile& prof);
+  virtual double &index(ANode *n, uint metricId, uint size = 0);
+  virtual double c_index(ANode *n, uint metricId);
+  virtual unsigned int idx_ge(ANode *n, uint metricId);
+  virtual MetricAccessor *nodeMetricAccessor(ANode *n);
 };
 
 

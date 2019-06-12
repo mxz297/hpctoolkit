@@ -273,7 +273,7 @@ Profile::match(Profile& y, int mergeTy, uint mrgFlag)
   }
 
   CCT::MergeEffectList* mrgEffects2 =
-    x.cct()->match(y.cct(), x_newMetricBegIdx, mrgFlag);
+    x.cct()->match(y.cct(), *this, x_newMetricBegIdx, mrgFlag);
 
   DIAG_Assert(Logic::implies(mrgEffects2 && !mrgEffects2->empty(),
 			     mrgFlag & CCT::MrgFlg_NormalizeTraceFileY),
@@ -361,7 +361,7 @@ Profile::merge(Profile& y, int mergeTy, uint mrgFlag)
   }
 
   CCT::MergeEffectList* mrgEffects2 =
-    x.cct()->merge(y.cct(), x_newMetricBegIdx, mrgFlag);
+    x.cct()->merge(y.cct(), *this, x_newMetricBegIdx, mrgFlag);
 
   DIAG_Assert(Logic::implies(mrgEffects2 && !mrgEffects2->empty(),
 			     mrgFlag & CCT::MrgFlg_NormalizeTraceFileY),
@@ -384,6 +384,9 @@ Profile::mergeMetrics(Profile& y, int mergeTy, uint& x_newMetricBegIdx)
   DIAG_MsgIf(0, "Profile::mergeMetrics: init\n"
 	     << "x: " << x.metricMgr()->toString("  ")
 	     << "y: " << y.metricMgr()->toString("  "));
+
+  for (std::map<const CCT::ANode*, MetricAccessor*>::iterator item = y.m_metrics.begin(); item != y.m_metrics.end(); ++item)
+    x.m_metrics.insert(*item);
 
   uint yBeg_mapsTo_xIdx = 0;
 
@@ -990,7 +993,7 @@ Profile::writeXML_hdr(std::ostream& os, uint metricBeg, uint metricEnd,
 
 
 std::ostream&
-Profile::dump(std::ostream& os) const
+Profile::dump(Prof::CallPath::Profile& prof, std::ostream& os) const
 {
   os << m_name << std::endl;
 
@@ -999,16 +1002,16 @@ Profile::dump(std::ostream& os) const
   m_loadmap->dump(os);
 
   if (m_cct) {
-    m_cct->dump(os, CCT::Tree::OFlg_DebugAll);
+    m_cct->dump(prof, os, CCT::Tree::OFlg_DebugAll);
   }
   return os;
 }
 
 
 void
-Profile::ddump() const
+Profile::ddump(Prof::CallPath::Profile& prof) const
 {
-  dump();
+  dump(prof);
 }
 
 
@@ -1027,7 +1030,7 @@ cct_makeNode(Prof::CallPath::Profile& prof,
 	     const std::string& ctxtStr);
 
 static void
-fmt_cct_makeNode(hpcrun_fmt_cct_node_t& n_fmt, const Prof::CCT::ANode& n,
+fmt_cct_makeNode(hpcrun_fmt_cct_node_t& n_fmt, const Prof::CallPath::Profile& prof, const Prof::CCT::ANode& n,
 		 epoch_flags_t flags);
 
 
@@ -1841,7 +1844,7 @@ Profile::fmt_cct_fwrite(const Profile& prof, FILE* fs, uint wFlags)
 
   for (CCT::ANodeIterator it(prof.cct()->root()); it.Current(); ++it) {
     CCT::ANode* n = it.current();
-    fmt_cct_makeNode(nodeFmt, *n, prof.m_flags);
+    fmt_cct_makeNode(nodeFmt, prof, *n, prof.m_flags);
 
     ret = hpcrun_fmt_cct_node_fwrite(&nodeFmt, prof.m_flags, fs);
     if (ret != HPCFMT_OK) return HPCFMT_ERR;
@@ -2185,7 +2188,7 @@ cct_makeNode(Prof::CallPath::Profile& prof,
 
   if (hasMetrics || isLeaf) {
     n = new CCT::Stmt(NULL, cpId, nodeFmt.as_info, lmId, lmIP, opIdx, lip);
-    n->recordMetrics(metricData);
+    prof.recordMetrics(n, metricData);
   }
 
   if (!isLeaf) {
@@ -2201,13 +2204,13 @@ cct_makeNode(Prof::CallPath::Profile& prof,
 
       n = new CCT::Call(NULL, cpId0, nodeFmt.as_info, lmId, lmIP, opIdx,
 			lipCopy);
-      n->recordMetrics(metricData0);
+      prof.recordMetrics(n, metricData0);
 
     }
     else {
       n = new CCT::Call(NULL, cpId, nodeFmt.as_info, lmId, lmIP, opIdx,
 			lip);
-      n->recordMetrics(metricData);
+      prof.recordMetrics(n, metricData);
     }
   }
 
@@ -2216,7 +2219,7 @@ cct_makeNode(Prof::CallPath::Profile& prof,
 
 
 static void
-fmt_cct_makeNode(hpcrun_fmt_cct_node_t& n_fmt, const Prof::CCT::ANode& n,
+fmt_cct_makeNode(hpcrun_fmt_cct_node_t& n_fmt, const Prof::CallPath::Profile& prof, const Prof::CCT::ANode& n,
 		 epoch_flags_t flags)
 {
   n_fmt.id = (n.isLeaf()) ? -(n.id()) : n.id();
@@ -2251,7 +2254,7 @@ fmt_cct_makeNode(hpcrun_fmt_cct_node_t& n_fmt, const Prof::CCT::ANode& n,
 
     // Note: use n_fmt.num_metrics rather than n_dyn.numMetrics() to
     // support skipping the writing of metrics.
-    MetricAccessor *me = Prof::CCT::ANode::metric_accessor(&n_dyn);
+    MetricAccessor *me = prof.metric_accessor(&n_dyn);
     for (uint i = me->idx_ge(0); i < n_fmt.num_metrics; i = me->idx_ge(i+1)) {
       hpcrun_metricVal_t m; // C99: (hpcrun_metricVal_t){.r = me->metric(i)};
       m.r = me->c_idx(i);

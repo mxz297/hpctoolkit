@@ -320,14 +320,14 @@ makeMetrics(Prof::CallPath::Profile& prof,
     m->computedType(Prof::Metric::ADesc::ComputedTy_Final); // proleptic
   }
 
-  cctRoot->aggregateMetricsIncl(ivalsetIncl);
-  cctRoot->aggregateMetricsExcl(ivalsetExcl);
+  cctRoot->aggregateMetricsIncl(prof, ivalsetIncl);
+  cctRoot->aggregateMetricsExcl(prof, ivalsetExcl);
 
 
   // -------------------------------------------------------
   // compute derived metrics
   // -------------------------------------------------------
-  cctRoot->computeMetrics(mMgr, mDrvdBeg, mDrvdEnd, /*doFinal*/false);
+  cctRoot->computeMetrics(mMgr, prof, mDrvdBeg, mDrvdEnd, /*doFinal*/false);
 
   for (uint i = mDrvdBeg; i < mDrvdEnd; ++i) {
     Prof::Metric::ADesc* m = mMgr.metric(i);
