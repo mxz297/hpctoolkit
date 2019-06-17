@@ -184,6 +184,9 @@ Profile::Profile(const std::string name)
 
 Profile::~Profile()
 {
+  for (std::map<const CCT::ANode*, MetricAccessor*>::iterator item =
+	 m_metrics.begin(); item != m_metrics.end(); ++item)
+    delete item->second;
   delete m_mMgr;
   delete m_loadmap;
   delete m_cct;
@@ -385,8 +388,8 @@ Profile::mergeMetrics(Profile& y, int mergeTy, uint& x_newMetricBegIdx)
 	     << "x: " << x.metricMgr()->toString("  ")
 	     << "y: " << y.metricMgr()->toString("  "));
 
-  for (std::map<const CCT::ANode*, MetricAccessor*>::iterator item = y.m_metrics.begin(); item != y.m_metrics.end(); ++item)
-    x.m_metrics.insert(*item);
+  x.m_metrics.insert(y.m_metrics.begin(), y.m_metrics.end());
+  y.m_metrics.clear();
 
   uint yBeg_mapsTo_xIdx = 0;
 
