@@ -175,7 +175,7 @@ writeStructure(const Prof::Struct::Tree& structure, const char* baseNm,
 	       int myRank) __attribute__((unused));
 
 static void
-writeProfile(const Prof::CallPath::Profile& prof, const char* baseNm,
+writeProfile(Prof::CallPath::Profile& prof, const char* baseNm,
 	     int myRank) __attribute__((unused));
 
 static std::string
@@ -656,7 +656,7 @@ makeSummaryMetrics(Prof::CallPath::Profile& profGbl,
   Prof::Metric::Mgr& mMgrGbl = *profGbl.metricMgr();
   Prof::CCT::ANode* cctRoot = profGbl.cct()->root();
 
-  Prof::CCT::TreeMetricAccessorInband tmai;
+  Prof::CCT::TreeMetricAccessorInband tmai(profGbl);
 
   // -------------------------------------------------------
   // compute local contribution summary metrics (initialize function)
@@ -927,7 +927,7 @@ makeSummaryMetrics_Lcl(Prof::CallPath::Profile& profGbl,
   Prof::CCT::Tree* cctGbl = profGbl.cct();
   Prof::CCT::ANode* cctRootGbl = cctGbl->root();
 
-  Prof::CCT::TreeMetricAccessorInband tmai;
+  Prof::CCT::TreeMetricAccessorInband tmai(profGbl);
 
   // -------------------------------------------------------
   // read profile file
@@ -980,8 +980,8 @@ makeSummaryMetrics_Lcl(Prof::CallPath::Profile& profGbl,
     }
   }
 
-  cctRootGbl->aggregateMetricsIncl(prof, ivalsetIncl);
-  cctRootGbl->aggregateMetricsExcl(prof, ivalsetExcl);
+  cctRootGbl->aggregateMetricsIncl(profGbl, ivalsetIncl);
+  cctRootGbl->aggregateMetricsExcl(profGbl, ivalsetExcl);
 
 
   // 2. Batch compute local derived metrics
@@ -1097,8 +1097,8 @@ makeThreadMetrics_Lcl(Prof::CallPath::Profile& profGbl,
   TreeMetricAccessorOutOfBand packedMetricsAccessor(packedMetrics);
   
   Prof::CCT::ANode* c_cct_root = profGbl.cct()->root(); // canonical cct root
-  c_cct_root->aggregateMetricsIncl(profGbl, ivalsetIncl, packedMetricsAccessor);
-  c_cct_root->aggregateMetricsExcl(profGbl, ivalsetExcl, packedMetricsAccessor);
+  c_cct_root->aggregateMetricsIncl(ivalsetIncl, packedMetricsAccessor);
+  c_cct_root->aggregateMetricsExcl(ivalsetExcl, packedMetricsAccessor);
   
 #if DEBUG_PACKED_METRICS
   packedMetrics.dump();
@@ -1206,7 +1206,7 @@ writeStructure(const Prof::Struct::Tree& structure, const char* baseNm,
 
 
 static void
-writeProfile(const Prof::CallPath::Profile& prof, const char* baseNm,
+writeProfile(Prof::CallPath::Profile& prof, const char* baseNm,
 	     int myRank)
 {
   // Only safe if static structure has not been added
@@ -1217,7 +1217,7 @@ writeProfile(const Prof::CallPath::Profile& prof, const char* baseNm,
 
   string fnm_xml = makeFileName(baseNm, "xml", myRank);
   std::ostream* os = IOUtil::OpenOStream(fnm_xml.c_str());
-  prof.cct()->writeXML(*os, 0, 0, Prof::CCT::Tree::OFlg_Debug);
+  prof.cct()->writeXML(prof, *os, 0, 0, Prof::CCT::Tree::OFlg_Debug);
   IOUtil::CloseStream(os);
 }
 

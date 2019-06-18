@@ -258,8 +258,8 @@ recvMerge(std::pair<Prof::CallPath::Profile*,
 	  ParallelAnalysis::PackedMetrics*> data,
 	  int src, int myRank, MPI_Comm comm)
 {
-  Prof::CCT::TreeMetricAccessorInband tmai;
   Prof::CallPath::Profile* profile = data.first;
+  Prof::CCT::TreeMetricAccessorInband tmai(*profile);
   ParallelAnalysis::PackedMetrics* packedMetrics = data.second;
 
   // receive new metric data from src
@@ -398,7 +398,7 @@ packMetrics(const Prof::CallPath::Profile& profile,
       //   node in the global CCT. For now, ignore them by refusing to record
       //   metrics for a node with an id that is out of bounds. 
       //   This may need to be revisited.
-      MetricAccessor *ma = Prof::CCT::ANode::metric_accessor(n);
+      MetricAccessor *ma = profile.metric_accessor(n);
       packedMetrics.idx(n->id(), mId1) = ma->c_idx(mId1 + mDrvdBeg);
     }
   }
