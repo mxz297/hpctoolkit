@@ -399,7 +399,8 @@ packMetrics(const Prof::CallPath::Profile& profile,
       //   metrics for a node with an id that is out of bounds. 
       //   This may need to be revisited.
       MetricAccessor *ma = profile.metric_accessor(n);
-      packedMetrics.idx(n->id(), mId1) = ma->c_idx(mId1 + mDrvdBeg);
+      if (ma != NULL)
+	packedMetrics.idx(n->id(), mId1) = ma->c_idx(mId1 + mDrvdBeg);
     }
   }
 }

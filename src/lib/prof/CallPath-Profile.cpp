@@ -2263,10 +2263,12 @@ fmt_cct_makeNode(hpcrun_fmt_cct_node_t& n_fmt, const Prof::CallPath::Profile& pr
     // Note: use n_fmt.num_metrics rather than n_dyn.numMetrics() to
     // support skipping the writing of metrics.
     MetricAccessor *me = prof.metric_accessor(&n_dyn);
-    for (uint i = me->idx_ge(0); i < n_fmt.num_metrics; i = me->idx_ge(i+1)) {
-      hpcrun_metricVal_t m; // C99: (hpcrun_metricVal_t){.r = me->metric(i)};
-      m.r = me->c_idx(i);
-      n_fmt.metrics[i] = m;
+    if (me != NULL) {
+      for (uint i = me->idx_ge(0); i < n_fmt.num_metrics; i = me->idx_ge(i+1)) {
+	hpcrun_metricVal_t m; // C99: (hpcrun_metricVal_t){.r = me->metric(i)};
+	m.r = me->c_idx(i);
+	n_fmt.metrics[i] = m;
+      }
     }
   }
   else {
