@@ -175,7 +175,7 @@ writeStructure(const Prof::Struct::Tree& structure, const char* baseNm,
 	       int myRank) __attribute__((unused));
 
 static void
-writeProfile(Prof::CallPath::Profile& prof, const char* baseNm,
+writeProfile(const Prof::CallPath::Profile& prof, const char* baseNm,
 	     int myRank) __attribute__((unused));
 
 static std::string
@@ -1206,7 +1206,7 @@ writeStructure(const Prof::Struct::Tree& structure, const char* baseNm,
 
 
 static void
-writeProfile(Prof::CallPath::Profile& prof, const char* baseNm,
+writeProfile(const Prof::CallPath::Profile& prof, const char* baseNm,
 	     int myRank)
 {
   // Only safe if static structure has not been added

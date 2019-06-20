@@ -337,7 +337,7 @@ Tree::verifyUniqueCPIds()
 
 
 std::ostream&
-Tree::writeXML(CallPath::Profile& prof, std::ostream& os, uint metricBeg, uint metricEnd,
+Tree::writeXML(const CallPath::Profile& prof, std::ostream& os, uint metricBeg, uint metricEnd,
 	       uint oFlags) const
 {
   if (m_root) {
@@ -1422,7 +1422,7 @@ ADynNode::nameDyn() const
 
 
 void
-ADynNode::writeDyn(std::ostream& o, CallPath::Profile& prof, uint GCC_ATTR_UNUSED oFlags,
+ADynNode::writeDyn(std::ostream& o, const CallPath::Profile& prof, uint GCC_ATTR_UNUSED oFlags,
 		   const char* pfx) const
 {
   string p(pfx);
@@ -1620,7 +1620,7 @@ Stmt::toStringMe(uint oFlags) const
 
 
 std::ostream&
-ANode::writeXML(CallPath::Profile& prof, ostream& os, uint metricBeg, uint metricEnd,
+ANode::writeXML(const CallPath::Profile& prof, ostream& os, uint metricBeg, uint metricEnd,
 		uint oFlags, const char* pfx) const
 {
   string indent = "  ";
@@ -1644,7 +1644,7 @@ ANode::writeXML(CallPath::Profile& prof, ostream& os, uint metricBeg, uint metri
 
 
 std::ostream&
-ANode::writeXML_path(CallPath::Profile& prof, ostream& os, uint metricBeg, uint metricEnd,
+ANode::writeXML_path(const CallPath::Profile& prof, ostream& os, uint metricBeg, uint metricEnd,
 		     uint oFlags, const char* pfx) const
 {
   string indent = "  ";
@@ -1696,7 +1696,7 @@ ANode::ddumpMe() const
 
 
 bool
-ANode::writeXML_pre(CallPath::Profile& prof, ostream& os, uint metricBeg, uint metricEnd,
+ANode::writeXML_pre(const CallPath::Profile& prof, ostream& os, uint metricBeg, uint metricEnd,
 		    uint oFlags, const char* pfx) const
 {
   bool doTag = (type() != TyRoot);

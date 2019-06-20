@@ -239,7 +239,7 @@ public:
   // Write contents
   // -------------------------------------------------------
   std::ostream&
-  writeXML(CallPath::Profile& prof,
+  writeXML(const CallPath::Profile& prof,
 	   std::ostream& os,
 	   uint metricBeg = Metric::IData::npos,
 	   uint metricEnd = Metric::IData::npos,
@@ -634,7 +634,7 @@ public:
   toStringMe(uint oFlags = 0) const;
 
   std::ostream&
-  writeXML(CallPath::Profile& prof,
+  writeXML(const CallPath::Profile& prof,
 	   std::ostream& os,
 	   uint metricBeg = Metric::IData::npos,
 	   uint metricEnd = Metric::IData::npos,
@@ -642,7 +642,7 @@ public:
 
 
   std::ostream&
-  writeXML_path(CallPath::Profile& prof,
+  writeXML_path(const CallPath::Profile& prof,
 	   std::ostream& os,
 	   uint metricBeg = Metric::IData::npos,
 	   uint metricEnd = Metric::IData::npos,
@@ -666,7 +666,7 @@ public:
 protected:
 
   bool
-  writeXML_pre(CallPath::Profile& prof,
+  writeXML_pre(const CallPath::Profile& prof,
 	       std::ostream& os,
 	       uint metricBeg = Metric::IData::npos,
 	       uint metricEnd = Metric::IData::npos,
@@ -951,7 +951,7 @@ public:
   nameDyn() const;
 
   void
-  writeDyn(std::ostream& os, CallPath::Profile& prof, uint oFlags = 0, const char* prefix = "") const;
+  writeDyn(std::ostream& os, const CallPath::Profile& prof, uint oFlags = 0, const char* prefix = "") const;
 
 
 private:

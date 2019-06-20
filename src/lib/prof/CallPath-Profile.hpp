@@ -399,9 +399,9 @@ private:
   std::map<const CCT::ANode*,MetricAccessor*> m_metrics;
 
 public:
-  bool hasMetrics(const CCT::ANode *n)
+  bool hasMetrics(const CCT::ANode *n) const
   {
-    std::map<const CCT::ANode*, MetricAccessor*>::iterator item = m_metrics.find(n);
+    std::map<const CCT::ANode*, MetricAccessor*>::const_iterator item = m_metrics.find(n);
     return (item != m_metrics.end() &&
 	    !item->second->empty());
   }
