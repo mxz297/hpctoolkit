@@ -184,6 +184,7 @@ Tree::merge(const Tree* y, CallPath::Profile& prof, uint x_newMetricBegIdx, uint
     ADynNode* y_dyn = dynamic_cast<ADynNode*>(y_root);
     if (x_dyn && y_dyn && ADynNode::isMergable(*x_dyn, *y_dyn)) {
       // Case 2a
+      x_dyn->duf_join(y_dyn);
       isPrecondition = true;
     }
     else if ((x_dyn->childCount() == 0 || y_dyn->childCount() == 0)
@@ -238,6 +239,7 @@ Tree::match(const Tree* y, CallPath::Profile& prof, uint x_newMetricBegIdx, uint
     ADynNode* y_dyn = dynamic_cast<ADynNode*>(y_root);
     if (x_dyn && y_dyn && ADynNode::isMergable(*x_dyn, *y_dyn)) {
       // Case 2a
+      x_dyn->duf_join(y_dyn);
       isPrecondition = true;
     }
     else if ((x_dyn->childCount() == 0 || y_dyn->childCount() == 0)
@@ -1148,6 +1150,8 @@ ANode::matchMe(const ANode& y, MergeContext* GCC_ATTR_UNUSED mrgCtxt,
 }
 
 
+uint ADynNode::s_num_mergeIds = 0;
+
 MergeEffect
 ADynNode::mergeMe(const ANode& y, CallPath::Profile& prof, MergeContext* mrgCtxt, uint metricBegIdx, bool mayConflict)
 {
@@ -1227,7 +1231,7 @@ ADynNode::matchMe(const ANode& y, MergeContext* mrgCtxt,
 }
 
 ADynNode*
-ANode::findDynChild(const ADynNode& y_dyn)
+ANode::findDynChild(ADynNode& y_dyn)
 {
   for (ANodeChildIterator it(this); it.Current(); ++it) {
     ANode* x = it.current();
@@ -1236,6 +1240,7 @@ ANode::findDynChild(const ADynNode& y_dyn)
     if (x_dyn) {
       // Base case: an ADynNode descendent
       if (ADynNode::isMergable(*x_dyn, y_dyn)) {
+	x_dyn->duf_join(&y_dyn);
 	return x_dyn;
       }
     }

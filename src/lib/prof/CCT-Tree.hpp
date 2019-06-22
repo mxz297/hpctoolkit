@@ -610,7 +610,7 @@ public:
   //   inspect the children of z.  Otherwise, it is necessary to find
   //   the collection of z's direct ADynNode descendents.
   CCT::ADynNode*
-  findDynChild(const ADynNode& y_dyn);
+  findDynChild(ADynNode& y_dyn);
 
 
   // --------------------------------------------------------
@@ -720,7 +720,8 @@ public:
     : ANode(type, parent, strct),
       m_cpId(cpId),
       m_as_info(lush_assoc_info_NULL),
-      m_lmId(LoadMap::LMId_NULL), m_lmIP(0), m_opIdx(0), m_lip(NULL)
+      m_lmId(LoadMap::LMId_NULL), m_lmIP(0), m_opIdx(0), m_lip(NULL),
+      m_mergeId(s_num_mergeIds++), m_duf_parent(this), m_duf_rank(0)
   { }
 
   ADynNode(ANodeTy type, ANode* parent, Struct::ACodeNode* strct,
@@ -729,7 +730,8 @@ public:
     : ANode(type, parent, strct),
       m_cpId(cpId),
       m_as_info(as_info),
-      m_lmId(lmId), m_lmIP(ip), m_opIdx(opIdx), m_lip(lip)
+      m_lmId(lmId), m_lmIP(ip), m_opIdx(opIdx), m_lip(lip),
+      m_mergeId(s_num_mergeIds++), m_duf_parent(this), m_duf_rank(0)
   { }
 
   virtual ~ADynNode()
@@ -964,6 +966,33 @@ private:
   ushort m_opIdx;          // index in the instruction [OBSOLETE]
 
   lush_lip_t* m_lip; // logical ip
+
+  uint m_mergeId;		// cpId after mergers.
+  static uint s_num_mergeIds;
+  /* Fields for disjoint-union-find for merging equivalent ADynNodes. */
+  ADynNode *m_duf_parent;
+  int m_duf_rank;
+
+public:
+  ADynNode *duf_find(void)
+  {
+    ADynNode *x = this;
+    while (x->m_duf_parent != x)
+      x = x->m_duf_parent = x->m_duf_parent->m_duf_parent;
+    return (x);
+  }
+  void duf_join(ADynNode *y)
+  {
+    ADynNode *x = duf_find();
+    y = y->duf_find();
+    if (x == y);
+    else if (x->m_duf_rank > y->m_duf_rank)
+      y->m_duf_parent = x;
+    else {
+      x->m_duf_parent = y;
+      x->m_duf_rank += (x->m_duf_rank == y->m_duf_rank);
+    }
+  }
 };
 
 
