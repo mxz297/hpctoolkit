@@ -227,6 +227,8 @@ recvMerge(Prof::CallPath::Profile* profile,
   }
     
   int mergeTy = Prof::CallPath::Profile::Merge_MergeMetricByName;
+  profile->cct()->root()->mergeIdentities(new_profile->cct()->root());
+  profile->renumber();
   profile->merge(*new_profile, mergeTy);
 
   // merging the perf event statistics

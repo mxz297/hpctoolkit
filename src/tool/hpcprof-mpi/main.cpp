@@ -148,7 +148,7 @@ makeDerivedMetricDescs(Prof::CallPath::Profile& profGbl,
 		       const vector<uint>& groupIdToGroupSizeMap,
 		       int myRank);
 
-static void
+static Prof::CallPath::Profile*
 makeSummaryMetrics_Lcl(Prof::CallPath::Profile& profGbl,
 		       const string& profileFile,
 		       const Analysis::Args& args, uint groupId, uint groupMax,
@@ -664,6 +664,7 @@ makeSummaryMetrics(Prof::CallPath::Profile& profGbl,
   cctRoot->computeMetricsIncr(mMgrGbl, tmai, mDrvdBeg, mDrvdEnd,
 			      Prof::Metric::AExprIncr::FnInit);
 
+  Prof::CallPath::Profile *prof[nArgs.paths->size()];
 #pragma omp parallel 
 {
 #pragma omp master 
@@ -673,11 +674,15 @@ makeSummaryMetrics(Prof::CallPath::Profile& profGbl,
     {
     const string& fnm = (*nArgs.paths)[i];
     uint groupId = (*nArgs.groupMap)[i];
-    makeSummaryMetrics_Lcl(profGbl, fnm, args, groupId, nArgs.groupMax,
-			   groupIdToGroupMetricsMap, myRank);
+    prof[i] = makeSummaryMetrics_Lcl(profGbl, fnm, args, groupId, nArgs.groupMax,
+				     groupIdToGroupMetricsMap, myRank);
     }
   }
 }
+#pragma omp parallel for
+  for (uint i = 0; i < nArgs.paths->size(); ++i) {
+    delete prof[i];
+  }
 
   // -------------------------------------------------------
   // create summary metrics via reduction (combine function)
@@ -915,7 +920,7 @@ makeDerivedMetricDescs(Prof::CallPath::Profile& profGbl,
 // - 'args' contains the correct final experiment database.
 //
 // FIXME: abstract between makeSummaryMetrics_Lcl() & makeThreadMetrics_Lcl()
-static void
+static Prof::CallPath::Profile*
 makeSummaryMetrics_Lcl(Prof::CallPath::Profile& profGbl,
 		       const string& profileFile,
 		       const Analysis::Args& args, uint groupId, uint groupMax,
@@ -1009,7 +1014,7 @@ makeSummaryMetrics_Lcl(Prof::CallPath::Profile& profGbl,
   // addition against 0).
   cctRootGbl->zeroMetricsDeep(profGbl, mBeg, mEnd); // cf. FnInitSrc
   
-  delete prof;
+  return prof;
   }
 }
 

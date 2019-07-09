@@ -160,6 +160,31 @@ Tree::~Tree()
   delete m_mergeCtxt;
 }
 
+void
+ANode::mergeIdentities(ANode *y)
+{
+  for (ANodeIterator it(y); it.Current(); ++it) {
+    ADynNode* y_dyn = dynamic_cast<ADynNode*>(it.Current());
+    if (y_dyn) {
+        ADynNode* x_dyn = findDynChild(*y_dyn);
+	if (x_dyn)
+	  x_dyn->duf_join(y_dyn);
+    }
+  }
+}
+
+void
+ANode::mergeNumberings(std::map<uint, uint> &cpIdMap)
+{
+  for (ANodeIterator it(this); it.Current(); ++it) {
+    ADynNode *dyn = dynamic_cast<ADynNode*>(it.Current());
+    if (dyn && dyn->cpId() != HPCRUN_FMT_CCTNodeId_NULL) {
+      uint newId = dyn->duf_id();
+      cpIdMap.insert(std::make_pair(dyn->cpId(), newId));
+      dyn->cpId(newId);
+    }
+  }
+}
 
 
 MergeEffectList*
@@ -184,7 +209,6 @@ Tree::merge(const Tree* y, CallPath::Profile& prof, uint x_newMetricBegIdx, uint
     ADynNode* y_dyn = dynamic_cast<ADynNode*>(y_root);
     if (x_dyn && y_dyn && ADynNode::isMergable(*x_dyn, *y_dyn)) {
       // Case 2a
-      x_dyn->duf_join(y_dyn);
       isPrecondition = true;
     }
     else if ((x_dyn->childCount() == 0 || y_dyn->childCount() == 0)
@@ -239,7 +263,6 @@ Tree::match(const Tree* y, CallPath::Profile& prof, uint x_newMetricBegIdx, uint
     ADynNode* y_dyn = dynamic_cast<ADynNode*>(y_root);
     if (x_dyn && y_dyn && ADynNode::isMergable(*x_dyn, *y_dyn)) {
       // Case 2a
-      x_dyn->duf_join(y_dyn);
       isPrecondition = true;
     }
     else if ((x_dyn->childCount() == 0 || y_dyn->childCount() == 0)
@@ -1150,7 +1173,7 @@ ANode::matchMe(const ANode& y, MergeContext* GCC_ATTR_UNUSED mrgCtxt,
 }
 
 
-uint ADynNode::s_num_mergeIds = 0;
+uint ADynNode::s_num_mergeIds = 1;
 
 MergeEffect
 ADynNode::mergeMe(const ANode& y, CallPath::Profile& prof, MergeContext* mrgCtxt, uint metricBegIdx, bool mayConflict)
@@ -1233,22 +1256,11 @@ ADynNode::matchMe(const ANode& y, MergeContext* mrgCtxt,
 ADynNode*
 ANode::findDynChild(ADynNode& y_dyn)
 {
-  for (ANodeChildIterator it(this); it.Current(); ++it) {
-    ANode* x = it.current();
-
-    ADynNode* x_dyn = dynamic_cast<ADynNode*>(x);
+  for (ANodeIterator it(this); it.Current(); ++it) {
+    ADynNode* x_dyn = dynamic_cast<ADynNode*>(it.Current());
     if (x_dyn) {
-      // Base case: an ADynNode descendent
       if (ADynNode::isMergable(*x_dyn, y_dyn)) {
-	x_dyn->duf_join(&y_dyn);
 	return x_dyn;
-      }
-    }
-    else {
-      // Inductive case: some other type; find the first ADynNode descendents.
-      ADynNode* x_dyn_descendent = x->findDynChild(y_dyn);
-      if (x_dyn_descendent) {
-	return x_dyn_descendent;
       }
     }
   }

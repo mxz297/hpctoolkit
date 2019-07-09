@@ -458,6 +458,8 @@ public:
   Stmt*
   ancestorStmt() const;
 
+  void mergeIdentities(ANode*);
+  void mergeNumberings(std::map<uint, uint> &);
 
   // --------------------------------------------------------
   // Metrics (cf. Struct::ANode)
@@ -721,8 +723,8 @@ public:
       m_cpId(cpId),
       m_as_info(lush_assoc_info_NULL),
       m_lmId(LoadMap::LMId_NULL), m_lmIP(0), m_opIdx(0), m_lip(NULL),
-      m_mergeId(s_num_mergeIds++), m_duf_parent(this), m_duf_rank(0)
-  { }
+      m_mergeId(s_num_mergeIds), m_duf_parent(this), m_duf_rank(0)
+  {s_num_mergeIds += 2; }
 
   ADynNode(ANodeTy type, ANode* parent, Struct::ACodeNode* strct,
 	   uint cpId, lush_assoc_info_t as_info,
@@ -731,8 +733,8 @@ public:
       m_cpId(cpId),
       m_as_info(as_info),
       m_lmId(lmId), m_lmIP(ip), m_opIdx(opIdx), m_lip(lip),
-      m_mergeId(s_num_mergeIds++), m_duf_parent(this), m_duf_rank(0)
-  { }
+      m_mergeId(s_num_mergeIds), m_duf_parent(this), m_duf_rank(0)
+  {s_num_mergeIds += 2; }
 
   virtual ~ADynNode()
   { delete m_lip; }
@@ -990,8 +992,13 @@ public:
       y->m_duf_parent = x;
     else {
       x->m_duf_parent = y;
-      x->m_duf_rank += (x->m_duf_rank == y->m_duf_rank);
+      y->m_duf_rank += (x->m_duf_rank == y->m_duf_rank);
     }
+  }
+
+  uint duf_id(void)
+  {
+    return (duf_find()->m_mergeId);
   }
 };
 

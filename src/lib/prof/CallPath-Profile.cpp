@@ -479,29 +479,8 @@ Profile::merge_fixCCT(const std::vector<LoadMap::MergeEffect>* mrgEffects)
   }
 }
 
-void doFixTrace(string m_traceFileName, const CCT::MergeEffectList* mrgEffects)
+void doFixTrace(string m_traceFileName, const std::map<uint, uint> &cpIdMap)
 {
-  typedef std::map<uint, uint> UIntToUIntMap;
-
-  // early exit for trivial case
-  if (m_traceFileName.empty()) {
-    return;
-  }
-  else if (!mrgEffects || mrgEffects->empty()) {
-    return; // rely on Analysis::Util::copyTraceFiles() to copy orig file
-  }
-
-  // N.B.: We could build a map of old->new cpIds within
-  // Profile::merge(), but the list of effects is more general and
-  // extensible.  There are no asymptotic problems with building the
-  // following map for local use.
-  UIntToUIntMap cpIdMap;
-  for (CCT::MergeEffectList::const_iterator it = mrgEffects->begin();
-       it != mrgEffects->end(); ++it) {
-    const CCT::MergeEffect& effct = *it;
-    cpIdMap.insert(std::make_pair(effct.old_cpId, effct.new_cpId));
-  }
-
   // ------------------------------------------------------------
   // Rewrite trace file
   // ------------------------------------------------------------
@@ -577,7 +556,7 @@ void doFixTrace(string m_traceFileName, const CCT::MergeEffectList* mrgEffects)
     // 2. Translate cct id
     uint cctId_old = datum.cpId;
     uint cctId_new = datum.cpId;
-    UIntToUIntMap::iterator it = cpIdMap.find(cctId_old);
+    std::map<uint, uint>::const_iterator it = cpIdMap.find(cctId_old);
     if (it != cpIdMap.end()) {
       cctId_new = it->second;
       DIAG_MsgIf(0, "  " << cctId_old << " -> " << cctId_new);
@@ -608,6 +587,32 @@ badwrite:
   }
 }
 
+void doFixTrace(string m_traceFileName, const CCT::MergeEffectList* mrgEffects)
+{
+  return;
+  typedef std::map<uint, uint> UIntToUIntMap;
+
+  // early exit for trivial case
+  if (m_traceFileName.empty()) {
+    return;
+  }
+  else if (!mrgEffects || mrgEffects->empty()) {
+    return; // rely on Analysis::Util::copyTraceFiles() to copy orig file
+  }
+
+  // N.B.: We could build a map of old->new cpIds within
+  // Profile::merge(), but the list of effects is more general and
+  // extensible.  There are no asymptotic problems with building the
+  // following map for local use.
+  UIntToUIntMap cpIdMap;
+  for (CCT::MergeEffectList::const_iterator it = mrgEffects->begin();
+       it != mrgEffects->end(); ++it) {
+    const CCT::MergeEffect& effct = *it;
+    cpIdMap.insert(std::make_pair(effct.old_cpId, effct.new_cpId));
+  }
+  doFixTrace(m_traceFileName, cpIdMap);
+}
+
 void
 Profile::merge_fixTrace(const CCT::MergeEffectList* mrgEffects)
 {
@@ -620,6 +625,13 @@ Profile::merge_fixTrace(const CCT::MergeEffectList* mrgEffects)
 }
 }
 
+void
+Profile::renumber(void)
+{
+  std::map<uint, uint> cpIdMap;
+  cct()->root()->mergeNumberings(cpIdMap);
+  doFixTrace(m_traceFileName, cpIdMap);
+}
 
 
 // ---------------------------------------------------
@@ -1951,7 +1963,7 @@ Profile::canonicalize(uint rFlags)
       n->link(rootNew);
     }
 
-    delete root; // N.B.: also deletes 'splicePoint'
+    delete root_dyn; // N.B.: also deletes 'splicePoint'
   }
   else if (root) {
     root->link(rootNew);

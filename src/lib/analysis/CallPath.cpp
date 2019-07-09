@@ -138,99 +138,58 @@ namespace Analysis {
 namespace CallPath {
 
 
-Prof::CallPath::Profile* 
-readSingle
-(
- const Util::StringVec& profileFiles, 
- const Util::UIntVec* groupMap,
- uint i,
- uint rFlags 
-)
-{
-  fprintf(stderr, "reading profile %d\n", i);
-  uint groupId = (groupMap) ? (*groupMap)[i] : 0;
-  Prof::CallPath::Profile* p = read(profileFiles[i], groupId, rFlags);
-  p->addDirectory(profileFiles[i]);
-  return p;
-}
-
-void
-mergePair(Prof::CallPath::Profile* left, Prof::CallPath::Profile* right, int mergeTy, uint mrgFlags)
-{
-    left->merge(*right, mergeTy, mrgFlags);
-    left->metricMgr()->mergePerfEventStatistics(right->metricMgr());
-    left->copyDirectory(right->directorySet());
-}
-
-Prof::CallPath::Profile* 
-readSet
-(
- const Util::StringVec& profileFiles, 
- const Util::UIntVec* groupMap,
- int mergeTy, 
- uint rFlags, 
- uint mrgFlags,
- uint lower,
- uint upper
-)
-{
-  if (upper == lower) { // singleton profile
-    Prof::CallPath::Profile* p = readSingle(profileFiles, groupMap, lower, rFlags);
-    return p; 
-  } else {  // multiple profiles
-    Prof::CallPath::Profile* left = 0;
-    Prof::CallPath::Profile* right = 0;
-    uint mid = lower + (upper - lower)/2; 
-#pragma omp task shared(left, profileFiles, groupMap) \
-  firstprivate(mergeTy, rFlags, mrgFlags, lower, mid)
-    {
-      left = readSet(profileFiles, groupMap, mergeTy, rFlags, mrgFlags, lower, mid);
-    }
-// #pragma omp task shared(right, profileFiles, groupMap) firstprivate(mergeTy, rFlags, mrgFlags, mid, upper)
-    {
-      right = readSet(profileFiles, groupMap, mergeTy, rFlags, mrgFlags, mid + 1, upper);
-    }
-#pragma omp taskwait 
-
-    mergePair(left, right, mergeTy, mrgFlags);
-    delete right;
-    return left;
-  }
-}
-
-
 Prof::CallPath::Profile*
 read(const Util::StringVec& profileFiles, const Util::UIntVec* groupMap,
      int mergeTy, uint rFlags, uint mrgFlags)
 {
   // Special case
   if (profileFiles.empty()) {
-    Prof::CallPath::Profile* prof = Prof::CallPath::Profile::make(rFlags);
-    return prof;
+    return Prof::CallPath::Profile::make(rFlags);
   }
   
   // General case
-  Prof::CallPath::Profile* prof = 0;
-#pragma omp parallel shared(prof)
-{
-#pragma omp master 
-{
-#if 1
-  prof = readSingle(profileFiles, groupMap, 0, rFlags);
-  for (uint i = 1; i < profileFiles.size(); ++i) {
-    Prof::CallPath::Profile* p = readSingle(profileFiles, groupMap, i, rFlags);
-    mergePair(prof, p, mergeTy, mrgFlags);
-    delete p;
+  uint nProfiles = profileFiles.size();
+  Prof::CallPath::Profile* prof[nProfiles];
+#pragma omp parallel for
+  for (uint i = 0; i < nProfiles; i++) {
+    fprintf(stderr, "reading profile %d\n", i);
+    uint groupId = (groupMap) ? (*groupMap)[i] : 0;
+    prof[i] = read(profileFiles[i], groupId, rFlags);
+    prof[i]->addDirectory(profileFiles[i]);
   }
-#else
-  prof = readSet(profileFiles, groupMap, mergeTy, 
-	         rFlags, mrgFlags, 0, profileFiles.size() - 1);
+
+  for (uint j = 0; j < nProfiles; j++) {
+#pragma omp parallel for
+    for (uint i = 0; i < nProfiles / 2; i++)
+      prof[(j + i) % nProfiles]->cct()->root()->
+	mergeIdentities(prof[(j + nProfiles - 1 - i) % nProfiles]->cct()->root());
+  }
+
+#pragma omp parallel for
+  for (uint i = 0; i < nProfiles; i++) {
+    fprintf(stderr, "renumbering profile %u\n", i);
+    prof[i]->renumber();
+  }
+
+  for (uint step = 1; step < nProfiles; step *= 2) {
+#pragma omp parallel for
+    for (uint i = 0; i < nProfiles; i += 2 * step) {
+      prof[i]->merge(*prof[i + step], mergeTy, mrgFlags);
+      prof[i]->metricMgr()->mergePerfEventStatistics(prof[i + step]->metricMgr());
+      prof[i]->copyDirectory(prof[i + step]->directorySet());
+    }
+  }
+
+#if 0
+#pragma omp parallel for
+  for (uint i = 1; i < nProfiles; i++) {
+      delete prof[i];
+  }
+
 #endif
-  prof->metricMgr()->mergePerfEventStatistics_finalize(profileFiles.size());
-}
-}
-  
-  return prof;
+  prof[0]->metricMgr()->mergePerfEventStatistics_finalize(nProfiles);
+
+  return prof[0];
 }
 
 

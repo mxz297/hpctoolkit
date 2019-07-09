@@ -239,6 +239,8 @@ public:
   };
 
 
+  void renumber(void);
+
   // merge: Given a Profile y, merge y into x = 'this'.  The 'mergeTy'
   //   parameter indicates how to merge y's metrics into x.  Returns
   //   the index of the first merged metric in x.
