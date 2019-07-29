@@ -168,6 +168,12 @@ ANode::mergeIdentities(ANode *y)
     if (y_dyn) {
         ADynNode* x_dyn = findDynChild(*y_dyn);
 	if (x_dyn)
+	  /*
+	   * These two ADynNodes from different trees satisfy
+	   * isMergable, so should identify the same node in the
+	   * global tree.  Join them so that they can have the same
+	   * global identifier.
+	   */
 	  x_dyn->duf_join(y_dyn);
     }
   }

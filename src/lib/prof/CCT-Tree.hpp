@@ -976,6 +976,9 @@ private:
   int m_duf_rank;
 
 public:
+  /*
+   * Implement find with path halving.
+   */
   ADynNode *duf_find(void)
   {
     ADynNode *x = this;
@@ -983,6 +986,9 @@ public:
       x = x->m_duf_parent = x->m_duf_parent->m_duf_parent;
     return (x);
   }
+  /*
+   * Implement union-by-rank.
+   */
   void duf_join(ADynNode *y)
   {
     ADynNode *x = duf_find();

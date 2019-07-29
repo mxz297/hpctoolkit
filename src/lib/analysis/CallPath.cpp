@@ -158,13 +158,25 @@ read(const Util::StringVec& profileFiles, const Util::UIntVec* groupMap,
     prof[i]->addDirectory(profileFiles[i]);
   }
 
-  for (uint j = 0; j < nProfiles; j++) {
+  /*
+   * Merge identities for all profiles pairs.  Run nProfiles-1 rounds
+   * of a round-robin pairs tournament.
+   */
+  uint n = nProfiles % 2 == 0 ? nProfiles - 1 : nProfiles;
+  for (uint i = 0; i < n; i++) {
+    /*
+     * In parallel, merge the identities of all matched pairs.
+     */
 #pragma omp parallel for
-    for (uint i = 0; i < nProfiles / 2; i++)
-      prof[(j + i) % nProfiles]->cct()->root()->
-	mergeIdentities(prof[(j + nProfiles - 1 - i) % nProfiles]->cct()->root());
+    for (uint j = 0; j < nProfiles/2; j++)
+      prof[(i-j+N/2)%N]->cct()->root()->
+	mergeIdentities(prof[(j==N/2) ? nProfiles-1 : (i+j+1+N/2)%N]->cct()->root());
   }
 
+  /*
+   * In parallel, rewrite trace files and replace local numberings
+   * with global ones.
+   */
 #pragma omp parallel for
   for (uint i = 0; i < nProfiles; i++) {
     fprintf(stderr, "renumbering profile %u\n", i);
