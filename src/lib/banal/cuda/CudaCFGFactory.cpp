@@ -7,6 +7,8 @@
 namespace Dyninst {
 namespace ParseAPI {
 
+// This function can be invoked in parallel.
+// So it must be thread-safe.
 Function *CudaCFGFactory::mkfunc(Address addr, FuncSource src, 
   std::string name, CodeObject * obj, CodeRegion * region, 
   Dyninst::InstructionSource * isrc) {
@@ -24,23 +26,26 @@ Function *CudaCFGFactory::mkfunc(Address addr, FuncSource src,
         CudaBlock *ret_block = NULL;
         // If a block has not been created by callers, create it
         // Otherwise get the block from _block_filter
-        if (_block_filter.find(block->id) == _block_filter.end()) {
-          if (DEBUG_CUDA_CFGFACTORY) {
-            std::cout << "New block: " << block->name << " id: " << block->id << std::endl;
+        {
+          tbb::concurrent_hash_map<size_t, CudaBlock *>::accessor a;
+          if (_block_filter.insert(a, block->id)) {
+            if (DEBUG_CUDA_CFGFACTORY) {
+              std::cout << "New block: " << block->name << " id: " << block->id << std::endl;
+            }
+            std::vector<Offset> inst_offsets;
+            for (auto *inst : block->insts) {
+              inst_offsets.push_back(inst->offset);
+            }
+            ret_block = new CudaBlock(obj, region, block->address, inst_offsets);
+            a->second = ret_block;            
+            blocks_.add(ret_block);
+          } else {
+            if (DEBUG_CUDA_CFGFACTORY) {
+              std::cout << "Old block: " << block->name << " id: " << block->id << std::endl;
+            }
+            ret_block = a->second;
           }
-          std::vector<Offset> inst_offsets;
-          for (auto *inst : block->insts) {
-            inst_offsets.push_back(inst->offset);
-          }
-          ret_block = new CudaBlock(obj, region, block->address, inst_offsets);
-          _block_filter[block->id] = ret_block;
-          blocks_.add(ret_block);
-        } else {
-          if (DEBUG_CUDA_CFGFACTORY) {
-            std::cout << "Old block: " << block->name << " id: " << block->id << std::endl;
-          }
-          ret_block = _block_filter[block->id];
-        }
+        }        
         ret_func->add_block(ret_block);
 
         if (first_entry) {
@@ -51,7 +56,8 @@ Function *CudaCFGFactory::mkfunc(Address addr, FuncSource src,
         // Create edges and related blocks
         for (auto *target : block->targets) {
           CudaBlock *ret_target_block = NULL;
-          if (_block_filter.find(target->block->id) == _block_filter.end()) {
+          tbb::concurrent_hash_map<size_t, CudaBlock *>::accessor a;
+          if (_block_filter.insert(a, target->block->id)) {          
             if (DEBUG_CUDA_CFGFACTORY) {
               std::cout << "New block: " << target->block->name << " id: " << target->block->id << std::endl;
             }
@@ -60,13 +66,13 @@ Function *CudaCFGFactory::mkfunc(Address addr, FuncSource src,
               inst_offsets.push_back(inst->offset);
             }
             ret_target_block = new CudaBlock(obj, region, target->block->address, inst_offsets);
-            _block_filter[target->block->id] = ret_target_block;
+            a->second = ret_target_block;
             blocks_.add(ret_target_block);
           } else {
             if (DEBUG_CUDA_CFGFACTORY) {
               std::cout << "Old block: " << target->block->name << " id: " << target->block->id << std::endl;
             }
-            ret_target_block = _block_filter[target->block->id];
+            ret_target_block = a->second;
           }
 
           Edge *ret_edge = new Edge(ret_block, ret_target_block, target->type);

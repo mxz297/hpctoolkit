@@ -2,7 +2,7 @@
 #define _CUDA_CFG_FACTORY_H_
 
 #include <CFGFactory.h>
-#include <unordered_map>
+#include <tbb/concurrent_hash_map.h>
 
 #include "CudaBlock.hpp"
 #include "DotCFG.hpp"
@@ -23,7 +23,7 @@ class PARSER_EXPORT CudaCFGFactory : public CFGFactory {
 
  private:
   std::vector<CudaParse::Function *> &_functions;
-  std::unordered_map<size_t, CudaBlock *> _block_filter; 
+  tbb::concurrent_hash_map<size_t, CudaBlock *> _block_filter; 
 };
 
 }
