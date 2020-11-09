@@ -217,6 +217,7 @@ roctracer_lib=
 HPCRUN_DEBUG_FLAGS=
 HPCRUN_EVENT_LIST=
 HPCRUN_CONTROL_KNOBS=
+ompt_preload=
 
 while test "x$1" != x
 do
@@ -312,6 +313,12 @@ do
 	    HPCRUN_FNBOUNDS_CMD="$1"
 	    shift
 	    ;;
+
+    # --------------------------------------------------
+    -ompt | --omptpreload )
+        ompt_preload="$1"
+        shift
+        ;;
 
 	# --------------------------------------------------
 
