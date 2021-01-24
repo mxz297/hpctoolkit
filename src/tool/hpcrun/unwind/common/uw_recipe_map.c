@@ -91,6 +91,7 @@
 #include "binarytree_uwi.h"
 #include "segv_handler.h"
 #include <messages/messages.h>
+#include "dyninst_translation.h"
 
 // libmonitor functions
 #include <monitor.h>
@@ -558,6 +559,7 @@ static void
 uw_recipe_map_notify_map(load_module_t* lm)
 {
   if (lm == NULL || lm->dso_info == NULL) return;
+
   void* start = lm->dso_info->start_addr;
   void* end = lm->dso_info->end_addr;
   uw_recipe_map_report_and_dump("*** map: before unpoisoning", start, end);
@@ -758,6 +760,8 @@ uw_recipe_map_lookup(void *addr, unwinder_t uw, unwindr_info_t *unwr_info)
   thread_data_t* td    = hpcrun_get_thread_data();
   ilmstat_btuwi_pair_t *ilm_btui = NULL;
   tree_stat_t oldstat = uw_recipe_map_lookup_helper(td, addr, uw, unwr_info, &ilm_btui);
+
+  addr = hpcrun_dyninst_translation_lookup(addr);  
 
   if (oldstat != READY) {
     // unwind recipe currently unavailable, prepare to build recipes for the enclosing

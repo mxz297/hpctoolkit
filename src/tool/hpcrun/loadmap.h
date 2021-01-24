@@ -222,7 +222,7 @@ hpcrun_loadmap_findLoadName(const char* name);
 //   load map. 'dso' is assumed to be non-NULL.  Locates the new load
 //   module at the front of the load map.
 load_module_t*
-hpcrun_loadmap_map(dso_info_t* dso);
+hpcrun_loadmap_map(dso_info_t* dso, struct dl_phdr_info* info);
 
 
 // hpcrun_loadmap_unmap: Note that 'lm' has been unmapped but retain a

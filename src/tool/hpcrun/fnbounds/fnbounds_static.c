@@ -101,7 +101,7 @@ fnbounds_init()
   dso_info_t *dso =
     hpcrun_dso_make(hpcrun_files_executable_pathname(), (void*)hpcrun_nm_addrs, 
 		    &fh, lm_beg_fn, lm_end_fn, lm_size);
-  fnbounds_executable_dso = hpcrun_loadmap_map(dso);
+  fnbounds_executable_dso = hpcrun_loadmap_map(dso, NULL);
 
   return 0;
 }

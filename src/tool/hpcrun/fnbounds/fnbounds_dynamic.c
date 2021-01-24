@@ -222,8 +222,7 @@ fnbounds_map_dso(const char *module_name, void *start, void *end, struct dl_phdr
 {
   dso_info_t *dso = fnbounds_compute(module_name, start, end);
   if (dso) {
-    load_module_t* lm = hpcrun_loadmap_map(dso);
-    lm->phdr_info = *info;
+    load_module_t* lm = hpcrun_loadmap_map(dso, info);    
     return lm;
   }
 

@@ -462,7 +462,7 @@ hpcrun_loadmap_dump_load_module_t(load_module_t* x)
 
 
 load_module_t*
-hpcrun_loadmap_map(dso_info_t* dso)
+hpcrun_loadmap_map(dso_info_t* dso, struct dl_phdr_info* info)
 {
   const char* msg = "";
 
@@ -487,6 +487,9 @@ hpcrun_loadmap_map(dso_info_t* dso)
   else {
 	lm = hpcrun_loadModule_new(dso->name);
 	lm->dso_info = dso;
+  if (info != NULL) {
+    lm->phdr_info = *info;  
+  }
 	hpcrun_loadmap_pushFront(lm);
 
 #if UW_RECIPE_MAP_DEBUG

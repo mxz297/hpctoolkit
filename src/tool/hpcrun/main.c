@@ -908,6 +908,7 @@ monitor_init_process(int *argc, char **argv, void* data)
   // must initialize unwind recipe map before initializing fnbounds
   // because mapping of load modules affects the recipe map.
   hpcrun_unw_init();
+  hpcrun_dyninst_translation_init();
 
   // We need to save vdso before initializing fnbounds this
   // is because fnbounds_init will iterate over the load map
