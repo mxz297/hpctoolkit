@@ -262,6 +262,9 @@ libunw_finalize_cursor(hpcrun_unw_cursor_t* cursor, int decrement_pc)
 
   if (decrement_pc) pc--;
   bool found = uw_recipe_map_lookup(pc, DWARF_UNWINDER, &cursor->unwr_info);
+  if (!found) {
+    found = false;
+  }
 
   compute_normalized_ips(cursor);
   TMSG(UNW, "unw_step: advance pc: %p\n", pc);
@@ -278,7 +281,7 @@ libunw_finalize_cursor(hpcrun_unw_cursor_t* cursor, int decrement_pc)
 
 step_state
 libunw_take_step(hpcrun_unw_cursor_t* cursor)
-{
+{  
   void *pc = libunw_cursor_get_pc(cursor); // pc after step
 
   // full unwind: stop at libmonitor fence.  this is where we hope the
@@ -297,8 +300,8 @@ libunw_take_step(hpcrun_unw_cursor_t* cursor)
     return STEP_STOP;
   }
 
-  bitree_uwi_t* uw = cursor->unwr_info.btuwi;
-  if (!uw) {
+  bitree_uwi_t* uw = cursor->unwr_info.btuwi;  
+  if (!uw) {    
     // If we don't have unwind info, let libunwind do its thing.
     int ret = unw_step(&(cursor->uc));
     if(ret > 0) return STEP_OK;

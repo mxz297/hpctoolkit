@@ -91,7 +91,7 @@
 #include "binarytree_uwi.h"
 #include "segv_handler.h"
 #include <messages/messages.h>
-#include "dyninst_translation.h"
+#include <hpcrun/dyninst/dyninst-translation.h>
 
 // libmonitor functions
 #include <monitor.h>
@@ -757,11 +757,17 @@ uw_recipe_map_lookup_noinsert
 bool
 uw_recipe_map_lookup(void *addr, unwinder_t uw, unwindr_info_t *unwr_info)
 {
+  if (uw == DWARF_UNWINDER) {
+    void* new_addr;
+    if (dyninst_translation_lookup(addr, &new_addr) == DYNINST_TRANSLATION_INSTRUMENTATION) {
+      //fprintf(stderr, "sample in instrumentation\n");
+    }
+    addr = new_addr;  
+  }  
+
   thread_data_t* td    = hpcrun_get_thread_data();
   ilmstat_btuwi_pair_t *ilm_btui = NULL;
   tree_stat_t oldstat = uw_recipe_map_lookup_helper(td, addr, uw, unwr_info, &ilm_btui);
-
-  addr = hpcrun_dyninst_translation_lookup(addr);  
 
   if (oldstat != READY) {
     // unwind recipe currently unavailable, prepare to build recipes for the enclosing

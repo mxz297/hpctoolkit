@@ -75,6 +75,9 @@
 #include "thread_data.h"
 #include "utilities/ip-normalized.h"
 
+#include "dyninst/dyninst-placeholder.h"
+#include "dyninst/dyninst-translation.h"
+
 
 //
 // Misc externals (not in an include file)
@@ -121,12 +124,38 @@ cct_insert_raw_backtrace(cct_node_t* cct,
       TMSG(REC_COMPRESS, "recursive routine compression!");
     }
     else {
-      cct_addr_t tmp = 
-	(cct_addr_t) {.as_info = path_beg->as_info, 
-		      .ip_norm = path_beg->ip_norm, 
-		      .lip = path_beg->lip};
-      TMSG(BT_INSERT, "inserting addr (%d, %p)", tmp.ip_norm.lm_id, tmp.ip_norm.lm_ip);
-      cct = hpcrun_cct_insert_addr(cct, &tmp);
+      void* new_addr;
+      dyninst_translation_result_type_t result
+        = dyninst_translation_lookup((void*)(path_beg->ip_norm.lm_ip), &new_addr);
+      if (result == DYNINST_TRANSLATION_INSTRUMENTATION) {
+        dyninst_op_ccts_t dyninst_inst_cct;
+
+        dyninst_op_placeholder_flags_t dyninst_op_placeholder_flags = 0;
+        dyninst_op_placeholder_flags_set(&dyninst_op_placeholder_flags,
+				 dyninst_placeholder_instrumentation);
+
+        dyninst_op_ccts_insert(cct, &dyninst_inst_cct, dyninst_op_placeholder_flags);
+        cct_node_t *dyninst_inst_node = dyninst_op_ccts_get(&dyninst_inst_cct, dyninst_placeholder_instrumentation);        
+        cct = dyninst_inst_node;
+        /*
+        if (hpcrun_cct_children(dyninst_inst_node) == NULL) {
+          cct_node_t *kernel = hpcrun_cct_insert_ip_norm(kernel_ph, kernel_ip);
+          hpcrun_cct_retain(kernel);
+        }
+        */
+      } else {
+        if (result == DYNINST_TRANSLATION_RELOCATION) {
+          path_beg->ip_norm.lm_ip = (uintptr_t)new_addr;
+        }
+        cct_addr_t tmp =
+          (cct_addr_t) {
+            .as_info = path_beg->as_info, 
+            .ip_norm = path_beg->ip_norm, 
+            .lip = path_beg->lip
+          };
+        TMSG(BT_INSERT, "inserting addr (%d, %p)", tmp.ip_norm.lm_id, tmp.ip_norm.lm_ip);
+        cct = hpcrun_cct_insert_addr(cct, &tmp);
+      }
     }
     parent_routine = path_beg->the_function;
   }

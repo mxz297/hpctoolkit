@@ -200,8 +200,7 @@ UNW_COMMON_FILES = \
 	unwind/common/libunw_intervals.c		\
 	unwind/common/stack_troll.c			\
 	unwind/common/uw_hash.c			\
-	unwind/common/uw_recipe_map.c   \
-	unwind/common/dyninst_translation.c
+	unwind/common/uw_recipe_map.c	
 
 UNW_X86_FILES = \
        $(UNW_COMMON_FILES) \
@@ -414,7 +413,9 @@ MY_BASE_FILES =				\
 	utilities/line_wrapping.c	\
 	utilities/timer.c		\
 	utilities/tokenize.h utilities/tokenize.c \
-	utilities/unlink.h utilities/unlink.c
+	utilities/unlink.h utilities/unlink.c \
+	dyninst/dyninst-translation.c \
+	dyninst/dyninst-placeholder.c
 
 # 	gpu/gpu-api.c
 #	trampoline/common/trampoline.c

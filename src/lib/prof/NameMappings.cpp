@@ -53,6 +53,8 @@ const char *GPU_KERNEL  = "<gpu kernel>";
 const char *NO_ACTIVITY = "<no activity>";
 const char *PARTIAL_CALLPATH = "<partial call paths>";
 
+const char *DYN_INST = "<dyninst instrumentation>";
+
 const int  TYPE_NORMAL_PROC  = 0;  // nothing special. Default value
 const int  TYPE_PLACEHOLDER  = 1;  // the proc is just a a place holder
 const int  TYPE_ROOT         = 2;  // the proc is a root tyoe, shown in a separate view in hpcviewer

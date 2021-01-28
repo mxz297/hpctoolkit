@@ -507,6 +507,7 @@ am__libhpcrun_la_SOURCES_DIST = utilities/first_func.c main.h main.c \
 	utilities/ip-normalized.c utilities/line_wrapping.c \
 	utilities/timer.c utilities/tokenize.h utilities/tokenize.c \
 	utilities/unlink.h utilities/unlink.c \
+	dyninst/dyninst-translation.c dyninst/dyninst-placeholder.c \
 	trampoline/common/trampoline_eager.c \
 	trampoline/common/trampoline_lazy.c \
 	sample-sources/perf/event_custom.c \
@@ -558,7 +559,6 @@ am__libhpcrun_la_SOURCES_DIST = utilities/first_func.c main.h main.c \
 	unwind/common/binarytree_uwi.c unwind/common/interval_t.c \
 	unwind/common/libunw_intervals.c unwind/common/stack_troll.c \
 	unwind/common/uw_hash.c unwind/common/uw_recipe_map.c \
-	unwind/common/dyninst_translation.c \
 	unwind/generic-libunwind/libunw-unwind.c \
 	unwind/ppc64/ppc64-unwind.c \
 	unwind/ppc64/ppc64-unwind-interval.c \
@@ -698,7 +698,9 @@ am__objects_14 = utilities/libhpcrun_la-first_func.lo \
 	utilities/libhpcrun_la-line_wrapping.lo \
 	utilities/libhpcrun_la-timer.lo \
 	utilities/libhpcrun_la-tokenize.lo \
-	utilities/libhpcrun_la-unlink.lo $(am__objects_7) \
+	utilities/libhpcrun_la-unlink.lo \
+	dyninst/libhpcrun_la-dyninst-translation.lo \
+	dyninst/libhpcrun_la-dyninst-placeholder.lo $(am__objects_7) \
 	$(am__objects_8) $(am__objects_9) $(am__objects_10) \
 	$(am__objects_11) $(am__objects_12) $(am__objects_13)
 am__objects_15 = fnbounds/libhpcrun_la-fnbounds_client.lo \
@@ -783,8 +785,7 @@ am__objects_45 = $(am__objects_44) \
 	unwind/common/libhpcrun_la-libunw_intervals.lo \
 	unwind/common/libhpcrun_la-stack_troll.lo \
 	unwind/common/libhpcrun_la-uw_hash.lo \
-	unwind/common/libhpcrun_la-uw_recipe_map.lo \
-	unwind/common/libhpcrun_la-dyninst_translation.lo
+	unwind/common/libhpcrun_la-uw_recipe_map.lo
 am__objects_46 = $(am__objects_45) \
 	unwind/generic-libunwind/libhpcrun_la-libunw-unwind.lo \
 	unwind/common/libhpcrun_la-default_validation_summary.lo
@@ -999,6 +1000,7 @@ am__libhpcrun_o_SOURCES_DIST = utilities/first_func.c main.h main.c \
 	utilities/ip-normalized.c utilities/line_wrapping.c \
 	utilities/timer.c utilities/tokenize.h utilities/tokenize.c \
 	utilities/unlink.h utilities/unlink.c \
+	dyninst/dyninst-translation.c dyninst/dyninst-placeholder.c \
 	trampoline/common/trampoline_eager.c \
 	trampoline/common/trampoline_lazy.c \
 	sample-sources/perf/event_custom.c \
@@ -1033,7 +1035,6 @@ am__libhpcrun_o_SOURCES_DIST = utilities/first_func.c main.h main.c \
 	unwind/common/binarytree_uwi.c unwind/common/interval_t.c \
 	unwind/common/libunw_intervals.c unwind/common/stack_troll.c \
 	unwind/common/uw_hash.c unwind/common/uw_recipe_map.c \
-	unwind/common/dyninst_translation.c \
 	unwind/generic-libunwind/libunw-unwind.c \
 	unwind/ppc64/ppc64-unwind.c \
 	unwind/ppc64/ppc64-unwind-interval.c \
@@ -1186,9 +1187,12 @@ am__objects_57 = utilities/libhpcrun_o-first_func.$(OBJEXT) \
 	utilities/libhpcrun_o-line_wrapping.$(OBJEXT) \
 	utilities/libhpcrun_o-timer.$(OBJEXT) \
 	utilities/libhpcrun_o-tokenize.$(OBJEXT) \
-	utilities/libhpcrun_o-unlink.$(OBJEXT) $(am__objects_50) \
-	$(am__objects_51) $(am__objects_52) $(am__objects_53) \
-	$(am__objects_54) $(am__objects_55) $(am__objects_56)
+	utilities/libhpcrun_o-unlink.$(OBJEXT) \
+	dyninst/libhpcrun_o-dyninst-translation.$(OBJEXT) \
+	dyninst/libhpcrun_o-dyninst-placeholder.$(OBJEXT) \
+	$(am__objects_50) $(am__objects_51) $(am__objects_52) \
+	$(am__objects_53) $(am__objects_54) $(am__objects_55) \
+	$(am__objects_56)
 am__objects_58 = fnbounds/libhpcrun_o-fnbounds_static.$(OBJEXT) \
 	libhpcrun_o-custom-init-static.$(OBJEXT)
 am__objects_59 = unwind/common/libhpcrun_o-default_validation_summary.$(OBJEXT)
@@ -1235,8 +1239,7 @@ am__objects_77 = $(am__objects_76) \
 	unwind/common/libhpcrun_o-libunw_intervals.$(OBJEXT) \
 	unwind/common/libhpcrun_o-stack_troll.$(OBJEXT) \
 	unwind/common/libhpcrun_o-uw_hash.$(OBJEXT) \
-	unwind/common/libhpcrun_o-uw_recipe_map.$(OBJEXT) \
-	unwind/common/libhpcrun_o-dyninst_translation.$(OBJEXT)
+	unwind/common/libhpcrun_o-uw_recipe_map.$(OBJEXT)
 am__objects_78 = $(am__objects_77) \
 	unwind/generic-libunwind/libhpcrun_o-libunw-unwind.$(OBJEXT) \
 	unwind/common/libhpcrun_o-default_validation_summary.$(OBJEXT)
@@ -1800,8 +1803,7 @@ UNW_COMMON_FILES = \
 	unwind/common/libunw_intervals.c		\
 	unwind/common/stack_troll.c			\
 	unwind/common/uw_hash.c			\
-	unwind/common/uw_recipe_map.c   \
-	unwind/common/dyninst_translation.c
+	unwind/common/uw_recipe_map.c	
 
 UNW_X86_FILES = \
        $(UNW_COMMON_FILES) \
@@ -1927,9 +1929,11 @@ MY_BASE_FILES = utilities/first_func.c main.h main.c disabled.c \
 	utilities/hpcrun-nanotime.c utilities/ip-normalized.h \
 	utilities/ip-normalized.c utilities/line_wrapping.c \
 	utilities/timer.c utilities/tokenize.h utilities/tokenize.c \
-	utilities/unlink.h utilities/unlink.c $(am__append_8) \
-	$(am__append_9) $(am__append_10) $(am__append_12) \
-	$(am__append_13) $(am__append_14) $(am__append_15)
+	utilities/unlink.h utilities/unlink.c \
+	dyninst/dyninst-translation.c dyninst/dyninst-placeholder.c \
+	$(am__append_8) $(am__append_9) $(am__append_10) \
+	$(am__append_12) $(am__append_13) $(am__append_14) \
+	$(am__append_15)
 MY_DYNAMIC_FILES = \
 	fnbounds/fnbounds_client.c	\
 	fnbounds/fnbounds_dynamic.c	\
@@ -2807,6 +2811,16 @@ utilities/libhpcrun_la-tokenize.lo: utilities/$(am__dirstamp) \
 	utilities/$(DEPDIR)/$(am__dirstamp)
 utilities/libhpcrun_la-unlink.lo: utilities/$(am__dirstamp) \
 	utilities/$(DEPDIR)/$(am__dirstamp)
+dyninst/$(am__dirstamp):
+	@$(MKDIR_P) dyninst
+	@: > dyninst/$(am__dirstamp)
+dyninst/$(DEPDIR)/$(am__dirstamp):
+	@$(MKDIR_P) dyninst/$(DEPDIR)
+	@: > dyninst/$(DEPDIR)/$(am__dirstamp)
+dyninst/libhpcrun_la-dyninst-translation.lo: dyninst/$(am__dirstamp) \
+	dyninst/$(DEPDIR)/$(am__dirstamp)
+dyninst/libhpcrun_la-dyninst-placeholder.lo: dyninst/$(am__dirstamp) \
+	dyninst/$(DEPDIR)/$(am__dirstamp)
 trampoline/common/$(am__dirstamp):
 	@$(MKDIR_P) trampoline/common
 	@: > trampoline/common/$(am__dirstamp)
@@ -3094,9 +3108,6 @@ unwind/common/libhpcrun_la-stack_troll.lo:  \
 unwind/common/libhpcrun_la-uw_hash.lo: unwind/common/$(am__dirstamp) \
 	unwind/common/$(DEPDIR)/$(am__dirstamp)
 unwind/common/libhpcrun_la-uw_recipe_map.lo:  \
-	unwind/common/$(am__dirstamp) \
-	unwind/common/$(DEPDIR)/$(am__dirstamp)
-unwind/common/libhpcrun_la-dyninst_translation.lo:  \
 	unwind/common/$(am__dirstamp) \
 	unwind/common/$(DEPDIR)/$(am__dirstamp)
 unwind/generic-libunwind/$(am__dirstamp):
@@ -3479,6 +3490,10 @@ utilities/libhpcrun_o-tokenize.$(OBJEXT): utilities/$(am__dirstamp) \
 	utilities/$(DEPDIR)/$(am__dirstamp)
 utilities/libhpcrun_o-unlink.$(OBJEXT): utilities/$(am__dirstamp) \
 	utilities/$(DEPDIR)/$(am__dirstamp)
+dyninst/libhpcrun_o-dyninst-translation.$(OBJEXT):  \
+	dyninst/$(am__dirstamp) dyninst/$(DEPDIR)/$(am__dirstamp)
+dyninst/libhpcrun_o-dyninst-placeholder.$(OBJEXT):  \
+	dyninst/$(am__dirstamp) dyninst/$(DEPDIR)/$(am__dirstamp)
 trampoline/common/libhpcrun_o-trampoline_eager.$(OBJEXT):  \
 	trampoline/common/$(am__dirstamp) \
 	trampoline/common/$(DEPDIR)/$(am__dirstamp)
@@ -3610,9 +3625,6 @@ unwind/common/libhpcrun_o-uw_hash.$(OBJEXT):  \
 	unwind/common/$(am__dirstamp) \
 	unwind/common/$(DEPDIR)/$(am__dirstamp)
 unwind/common/libhpcrun_o-uw_recipe_map.$(OBJEXT):  \
-	unwind/common/$(am__dirstamp) \
-	unwind/common/$(DEPDIR)/$(am__dirstamp)
-unwind/common/libhpcrun_o-dyninst_translation.$(OBJEXT):  \
 	unwind/common/$(am__dirstamp) \
 	unwind/common/$(DEPDIR)/$(am__dirstamp)
 unwind/generic-libunwind/libhpcrun_o-libunw-unwind.$(OBJEXT):  \
@@ -3768,6 +3780,8 @@ mostlyclean-compile:
 	-rm -f cct/*.lo
 	-rm -f dlmopen/*.$(OBJEXT)
 	-rm -f dlmopen/*.lo
+	-rm -f dyninst/*.$(OBJEXT)
+	-rm -f dyninst/*.lo
 	-rm -f extern-real/*.$(OBJEXT)
 	-rm -f extern-real/*.lo
 	-rm -f fnbounds/*.$(OBJEXT)
@@ -3930,6 +3944,10 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@cct/$(DEPDIR)/libhpcrun_o-cct_bundle.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@cct/$(DEPDIR)/libhpcrun_o-cct_ctxt.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@dlmopen/$(DEPDIR)/dlmopen.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@dyninst/$(DEPDIR)/libhpcrun_la-dyninst-placeholder.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@dyninst/$(DEPDIR)/libhpcrun_la-dyninst-translation.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@dyninst/$(DEPDIR)/libhpcrun_o-dyninst-placeholder.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@dyninst/$(DEPDIR)/libhpcrun_o-dyninst-translation.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@extern-real/$(DEPDIR)/libhpcrun_la-dl-iterate.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@extern-real/$(DEPDIR)/libhpcrun_la-mmap.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@extern-real/$(DEPDIR)/libhpcrun_o-dl-iterate.Po@am__quote@
@@ -4190,7 +4208,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@unwind/common/$(DEPDIR)/libhpcrun_la-backtrace.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@unwind/common/$(DEPDIR)/libhpcrun_la-binarytree_uwi.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@unwind/common/$(DEPDIR)/libhpcrun_la-default_validation_summary.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@unwind/common/$(DEPDIR)/libhpcrun_la-dyninst_translation.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@unwind/common/$(DEPDIR)/libhpcrun_la-interval_t.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@unwind/common/$(DEPDIR)/libhpcrun_la-libunw_intervals.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@unwind/common/$(DEPDIR)/libhpcrun_la-stack_troll.Plo@am__quote@
@@ -4200,7 +4217,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@unwind/common/$(DEPDIR)/libhpcrun_o-backtrace.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@unwind/common/$(DEPDIR)/libhpcrun_o-binarytree_uwi.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@unwind/common/$(DEPDIR)/libhpcrun_o-default_validation_summary.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@unwind/common/$(DEPDIR)/libhpcrun_o-dyninst_translation.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@unwind/common/$(DEPDIR)/libhpcrun_o-interval_t.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@unwind/common/$(DEPDIR)/libhpcrun_o-libunw_intervals.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@unwind/common/$(DEPDIR)/libhpcrun_o-stack_troll.Po@am__quote@
@@ -5362,6 +5378,20 @@ utilities/libhpcrun_la-unlink.lo: utilities/unlink.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libhpcrun_la_CPPFLAGS) $(CPPFLAGS) $(libhpcrun_la_CFLAGS) $(CFLAGS) -c -o utilities/libhpcrun_la-unlink.lo `test -f 'utilities/unlink.c' || echo '$(srcdir)/'`utilities/unlink.c
 
+dyninst/libhpcrun_la-dyninst-translation.lo: dyninst/dyninst-translation.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libhpcrun_la_CPPFLAGS) $(CPPFLAGS) $(libhpcrun_la_CFLAGS) $(CFLAGS) -MT dyninst/libhpcrun_la-dyninst-translation.lo -MD -MP -MF dyninst/$(DEPDIR)/libhpcrun_la-dyninst-translation.Tpo -c -o dyninst/libhpcrun_la-dyninst-translation.lo `test -f 'dyninst/dyninst-translation.c' || echo '$(srcdir)/'`dyninst/dyninst-translation.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) dyninst/$(DEPDIR)/libhpcrun_la-dyninst-translation.Tpo dyninst/$(DEPDIR)/libhpcrun_la-dyninst-translation.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='dyninst/dyninst-translation.c' object='dyninst/libhpcrun_la-dyninst-translation.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libhpcrun_la_CPPFLAGS) $(CPPFLAGS) $(libhpcrun_la_CFLAGS) $(CFLAGS) -c -o dyninst/libhpcrun_la-dyninst-translation.lo `test -f 'dyninst/dyninst-translation.c' || echo '$(srcdir)/'`dyninst/dyninst-translation.c
+
+dyninst/libhpcrun_la-dyninst-placeholder.lo: dyninst/dyninst-placeholder.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libhpcrun_la_CPPFLAGS) $(CPPFLAGS) $(libhpcrun_la_CFLAGS) $(CFLAGS) -MT dyninst/libhpcrun_la-dyninst-placeholder.lo -MD -MP -MF dyninst/$(DEPDIR)/libhpcrun_la-dyninst-placeholder.Tpo -c -o dyninst/libhpcrun_la-dyninst-placeholder.lo `test -f 'dyninst/dyninst-placeholder.c' || echo '$(srcdir)/'`dyninst/dyninst-placeholder.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) dyninst/$(DEPDIR)/libhpcrun_la-dyninst-placeholder.Tpo dyninst/$(DEPDIR)/libhpcrun_la-dyninst-placeholder.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='dyninst/dyninst-placeholder.c' object='dyninst/libhpcrun_la-dyninst-placeholder.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libhpcrun_la_CPPFLAGS) $(CPPFLAGS) $(libhpcrun_la_CFLAGS) $(CFLAGS) -c -o dyninst/libhpcrun_la-dyninst-placeholder.lo `test -f 'dyninst/dyninst-placeholder.c' || echo '$(srcdir)/'`dyninst/dyninst-placeholder.c
+
 trampoline/common/libhpcrun_la-trampoline_eager.lo: trampoline/common/trampoline_eager.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libhpcrun_la_CPPFLAGS) $(CPPFLAGS) $(libhpcrun_la_CFLAGS) $(CFLAGS) -MT trampoline/common/libhpcrun_la-trampoline_eager.lo -MD -MP -MF trampoline/common/$(DEPDIR)/libhpcrun_la-trampoline_eager.Tpo -c -o trampoline/common/libhpcrun_la-trampoline_eager.lo `test -f 'trampoline/common/trampoline_eager.c' || echo '$(srcdir)/'`trampoline/common/trampoline_eager.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) trampoline/common/$(DEPDIR)/libhpcrun_la-trampoline_eager.Tpo trampoline/common/$(DEPDIR)/libhpcrun_la-trampoline_eager.Plo
@@ -5844,13 +5874,6 @@ unwind/common/libhpcrun_la-uw_recipe_map.lo: unwind/common/uw_recipe_map.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='unwind/common/uw_recipe_map.c' object='unwind/common/libhpcrun_la-uw_recipe_map.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libhpcrun_la_CPPFLAGS) $(CPPFLAGS) $(libhpcrun_la_CFLAGS) $(CFLAGS) -c -o unwind/common/libhpcrun_la-uw_recipe_map.lo `test -f 'unwind/common/uw_recipe_map.c' || echo '$(srcdir)/'`unwind/common/uw_recipe_map.c
-
-unwind/common/libhpcrun_la-dyninst_translation.lo: unwind/common/dyninst_translation.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libhpcrun_la_CPPFLAGS) $(CPPFLAGS) $(libhpcrun_la_CFLAGS) $(CFLAGS) -MT unwind/common/libhpcrun_la-dyninst_translation.lo -MD -MP -MF unwind/common/$(DEPDIR)/libhpcrun_la-dyninst_translation.Tpo -c -o unwind/common/libhpcrun_la-dyninst_translation.lo `test -f 'unwind/common/dyninst_translation.c' || echo '$(srcdir)/'`unwind/common/dyninst_translation.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) unwind/common/$(DEPDIR)/libhpcrun_la-dyninst_translation.Tpo unwind/common/$(DEPDIR)/libhpcrun_la-dyninst_translation.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='unwind/common/dyninst_translation.c' object='unwind/common/libhpcrun_la-dyninst_translation.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libhpcrun_la_CPPFLAGS) $(CPPFLAGS) $(libhpcrun_la_CFLAGS) $(CFLAGS) -c -o unwind/common/libhpcrun_la-dyninst_translation.lo `test -f 'unwind/common/dyninst_translation.c' || echo '$(srcdir)/'`unwind/common/dyninst_translation.c
 
 unwind/generic-libunwind/libhpcrun_la-libunw-unwind.lo: unwind/generic-libunwind/libunw-unwind.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libhpcrun_la_CPPFLAGS) $(CPPFLAGS) $(libhpcrun_la_CFLAGS) $(CFLAGS) -MT unwind/generic-libunwind/libhpcrun_la-libunw-unwind.lo -MD -MP -MF unwind/generic-libunwind/$(DEPDIR)/libhpcrun_la-libunw-unwind.Tpo -c -o unwind/generic-libunwind/libhpcrun_la-libunw-unwind.lo `test -f 'unwind/generic-libunwind/libunw-unwind.c' || echo '$(srcdir)/'`unwind/generic-libunwind/libunw-unwind.c
@@ -7833,6 +7856,34 @@ utilities/libhpcrun_o-unlink.obj: utilities/unlink.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libhpcrun_o_CPPFLAGS) $(CPPFLAGS) $(libhpcrun_o_CFLAGS) $(CFLAGS) -c -o utilities/libhpcrun_o-unlink.obj `if test -f 'utilities/unlink.c'; then $(CYGPATH_W) 'utilities/unlink.c'; else $(CYGPATH_W) '$(srcdir)/utilities/unlink.c'; fi`
 
+dyninst/libhpcrun_o-dyninst-translation.o: dyninst/dyninst-translation.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libhpcrun_o_CPPFLAGS) $(CPPFLAGS) $(libhpcrun_o_CFLAGS) $(CFLAGS) -MT dyninst/libhpcrun_o-dyninst-translation.o -MD -MP -MF dyninst/$(DEPDIR)/libhpcrun_o-dyninst-translation.Tpo -c -o dyninst/libhpcrun_o-dyninst-translation.o `test -f 'dyninst/dyninst-translation.c' || echo '$(srcdir)/'`dyninst/dyninst-translation.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) dyninst/$(DEPDIR)/libhpcrun_o-dyninst-translation.Tpo dyninst/$(DEPDIR)/libhpcrun_o-dyninst-translation.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='dyninst/dyninst-translation.c' object='dyninst/libhpcrun_o-dyninst-translation.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libhpcrun_o_CPPFLAGS) $(CPPFLAGS) $(libhpcrun_o_CFLAGS) $(CFLAGS) -c -o dyninst/libhpcrun_o-dyninst-translation.o `test -f 'dyninst/dyninst-translation.c' || echo '$(srcdir)/'`dyninst/dyninst-translation.c
+
+dyninst/libhpcrun_o-dyninst-translation.obj: dyninst/dyninst-translation.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libhpcrun_o_CPPFLAGS) $(CPPFLAGS) $(libhpcrun_o_CFLAGS) $(CFLAGS) -MT dyninst/libhpcrun_o-dyninst-translation.obj -MD -MP -MF dyninst/$(DEPDIR)/libhpcrun_o-dyninst-translation.Tpo -c -o dyninst/libhpcrun_o-dyninst-translation.obj `if test -f 'dyninst/dyninst-translation.c'; then $(CYGPATH_W) 'dyninst/dyninst-translation.c'; else $(CYGPATH_W) '$(srcdir)/dyninst/dyninst-translation.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) dyninst/$(DEPDIR)/libhpcrun_o-dyninst-translation.Tpo dyninst/$(DEPDIR)/libhpcrun_o-dyninst-translation.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='dyninst/dyninst-translation.c' object='dyninst/libhpcrun_o-dyninst-translation.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libhpcrun_o_CPPFLAGS) $(CPPFLAGS) $(libhpcrun_o_CFLAGS) $(CFLAGS) -c -o dyninst/libhpcrun_o-dyninst-translation.obj `if test -f 'dyninst/dyninst-translation.c'; then $(CYGPATH_W) 'dyninst/dyninst-translation.c'; else $(CYGPATH_W) '$(srcdir)/dyninst/dyninst-translation.c'; fi`
+
+dyninst/libhpcrun_o-dyninst-placeholder.o: dyninst/dyninst-placeholder.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libhpcrun_o_CPPFLAGS) $(CPPFLAGS) $(libhpcrun_o_CFLAGS) $(CFLAGS) -MT dyninst/libhpcrun_o-dyninst-placeholder.o -MD -MP -MF dyninst/$(DEPDIR)/libhpcrun_o-dyninst-placeholder.Tpo -c -o dyninst/libhpcrun_o-dyninst-placeholder.o `test -f 'dyninst/dyninst-placeholder.c' || echo '$(srcdir)/'`dyninst/dyninst-placeholder.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) dyninst/$(DEPDIR)/libhpcrun_o-dyninst-placeholder.Tpo dyninst/$(DEPDIR)/libhpcrun_o-dyninst-placeholder.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='dyninst/dyninst-placeholder.c' object='dyninst/libhpcrun_o-dyninst-placeholder.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libhpcrun_o_CPPFLAGS) $(CPPFLAGS) $(libhpcrun_o_CFLAGS) $(CFLAGS) -c -o dyninst/libhpcrun_o-dyninst-placeholder.o `test -f 'dyninst/dyninst-placeholder.c' || echo '$(srcdir)/'`dyninst/dyninst-placeholder.c
+
+dyninst/libhpcrun_o-dyninst-placeholder.obj: dyninst/dyninst-placeholder.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libhpcrun_o_CPPFLAGS) $(CPPFLAGS) $(libhpcrun_o_CFLAGS) $(CFLAGS) -MT dyninst/libhpcrun_o-dyninst-placeholder.obj -MD -MP -MF dyninst/$(DEPDIR)/libhpcrun_o-dyninst-placeholder.Tpo -c -o dyninst/libhpcrun_o-dyninst-placeholder.obj `if test -f 'dyninst/dyninst-placeholder.c'; then $(CYGPATH_W) 'dyninst/dyninst-placeholder.c'; else $(CYGPATH_W) '$(srcdir)/dyninst/dyninst-placeholder.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) dyninst/$(DEPDIR)/libhpcrun_o-dyninst-placeholder.Tpo dyninst/$(DEPDIR)/libhpcrun_o-dyninst-placeholder.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='dyninst/dyninst-placeholder.c' object='dyninst/libhpcrun_o-dyninst-placeholder.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libhpcrun_o_CPPFLAGS) $(CPPFLAGS) $(libhpcrun_o_CFLAGS) $(CFLAGS) -c -o dyninst/libhpcrun_o-dyninst-placeholder.obj `if test -f 'dyninst/dyninst-placeholder.c'; then $(CYGPATH_W) 'dyninst/dyninst-placeholder.c'; else $(CYGPATH_W) '$(srcdir)/dyninst/dyninst-placeholder.c'; fi`
+
 trampoline/common/libhpcrun_o-trampoline_eager.o: trampoline/common/trampoline_eager.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libhpcrun_o_CPPFLAGS) $(CPPFLAGS) $(libhpcrun_o_CFLAGS) $(CFLAGS) -MT trampoline/common/libhpcrun_o-trampoline_eager.o -MD -MP -MF trampoline/common/$(DEPDIR)/libhpcrun_o-trampoline_eager.Tpo -c -o trampoline/common/libhpcrun_o-trampoline_eager.o `test -f 'trampoline/common/trampoline_eager.c' || echo '$(srcdir)/'`trampoline/common/trampoline_eager.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) trampoline/common/$(DEPDIR)/libhpcrun_o-trampoline_eager.Tpo trampoline/common/$(DEPDIR)/libhpcrun_o-trampoline_eager.Po
@@ -8435,20 +8486,6 @@ unwind/common/libhpcrun_o-uw_recipe_map.obj: unwind/common/uw_recipe_map.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libhpcrun_o_CPPFLAGS) $(CPPFLAGS) $(libhpcrun_o_CFLAGS) $(CFLAGS) -c -o unwind/common/libhpcrun_o-uw_recipe_map.obj `if test -f 'unwind/common/uw_recipe_map.c'; then $(CYGPATH_W) 'unwind/common/uw_recipe_map.c'; else $(CYGPATH_W) '$(srcdir)/unwind/common/uw_recipe_map.c'; fi`
 
-unwind/common/libhpcrun_o-dyninst_translation.o: unwind/common/dyninst_translation.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libhpcrun_o_CPPFLAGS) $(CPPFLAGS) $(libhpcrun_o_CFLAGS) $(CFLAGS) -MT unwind/common/libhpcrun_o-dyninst_translation.o -MD -MP -MF unwind/common/$(DEPDIR)/libhpcrun_o-dyninst_translation.Tpo -c -o unwind/common/libhpcrun_o-dyninst_translation.o `test -f 'unwind/common/dyninst_translation.c' || echo '$(srcdir)/'`unwind/common/dyninst_translation.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) unwind/common/$(DEPDIR)/libhpcrun_o-dyninst_translation.Tpo unwind/common/$(DEPDIR)/libhpcrun_o-dyninst_translation.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='unwind/common/dyninst_translation.c' object='unwind/common/libhpcrun_o-dyninst_translation.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libhpcrun_o_CPPFLAGS) $(CPPFLAGS) $(libhpcrun_o_CFLAGS) $(CFLAGS) -c -o unwind/common/libhpcrun_o-dyninst_translation.o `test -f 'unwind/common/dyninst_translation.c' || echo '$(srcdir)/'`unwind/common/dyninst_translation.c
-
-unwind/common/libhpcrun_o-dyninst_translation.obj: unwind/common/dyninst_translation.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libhpcrun_o_CPPFLAGS) $(CPPFLAGS) $(libhpcrun_o_CFLAGS) $(CFLAGS) -MT unwind/common/libhpcrun_o-dyninst_translation.obj -MD -MP -MF unwind/common/$(DEPDIR)/libhpcrun_o-dyninst_translation.Tpo -c -o unwind/common/libhpcrun_o-dyninst_translation.obj `if test -f 'unwind/common/dyninst_translation.c'; then $(CYGPATH_W) 'unwind/common/dyninst_translation.c'; else $(CYGPATH_W) '$(srcdir)/unwind/common/dyninst_translation.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) unwind/common/$(DEPDIR)/libhpcrun_o-dyninst_translation.Tpo unwind/common/$(DEPDIR)/libhpcrun_o-dyninst_translation.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='unwind/common/dyninst_translation.c' object='unwind/common/libhpcrun_o-dyninst_translation.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libhpcrun_o_CPPFLAGS) $(CPPFLAGS) $(libhpcrun_o_CFLAGS) $(CFLAGS) -c -o unwind/common/libhpcrun_o-dyninst_translation.obj `if test -f 'unwind/common/dyninst_translation.c'; then $(CYGPATH_W) 'unwind/common/dyninst_translation.c'; else $(CYGPATH_W) '$(srcdir)/unwind/common/dyninst_translation.c'; fi`
-
 unwind/generic-libunwind/libhpcrun_o-libunw-unwind.o: unwind/generic-libunwind/libunw-unwind.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libhpcrun_o_CPPFLAGS) $(CPPFLAGS) $(libhpcrun_o_CFLAGS) $(CFLAGS) -MT unwind/generic-libunwind/libhpcrun_o-libunw-unwind.o -MD -MP -MF unwind/generic-libunwind/$(DEPDIR)/libhpcrun_o-libunw-unwind.Tpo -c -o unwind/generic-libunwind/libhpcrun_o-libunw-unwind.o `test -f 'unwind/generic-libunwind/libunw-unwind.c' || echo '$(srcdir)/'`unwind/generic-libunwind/libunw-unwind.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) unwind/generic-libunwind/$(DEPDIR)/libhpcrun_o-libunw-unwind.Tpo unwind/generic-libunwind/$(DEPDIR)/libhpcrun_o-libunw-unwind.Po
@@ -8806,6 +8843,7 @@ clean-libtool:
 	-rm -rf audit/.libs audit/_libs
 	-rm -rf cct/.libs cct/_libs
 	-rm -rf dlmopen/.libs dlmopen/_libs
+	-rm -rf dyninst/.libs dyninst/_libs
 	-rm -rf extern-real/.libs extern-real/_libs
 	-rm -rf fnbounds/.libs fnbounds/_libs
 	-rm -rf gpu/.libs gpu/_libs
@@ -9061,6 +9099,8 @@ distclean-generic:
 	-rm -f cct/$(am__dirstamp)
 	-rm -f dlmopen/$(DEPDIR)/$(am__dirstamp)
 	-rm -f dlmopen/$(am__dirstamp)
+	-rm -f dyninst/$(DEPDIR)/$(am__dirstamp)
+	-rm -f dyninst/$(am__dirstamp)
 	-rm -f extern-real/$(DEPDIR)/$(am__dirstamp)
 	-rm -f extern-real/$(am__dirstamp)
 	-rm -f fnbounds/$(DEPDIR)/$(am__dirstamp)
@@ -9142,7 +9182,7 @@ clean-am: clean-generic clean-libtool clean-noinstLTLIBRARIES \
 	clean-pkglibLTLIBRARIES mostlyclean-am
 
 distclean: distclean-recursive
-	-rm -rf ./$(DEPDIR) audit/$(DEPDIR) cct/$(DEPDIR) dlmopen/$(DEPDIR) extern-real/$(DEPDIR) fnbounds/$(DEPDIR) gpu/$(DEPDIR) gpu/amd/$(DEPDIR) gpu/instrumentation/$(DEPDIR) gpu/level0/$(DEPDIR) gpu/nvidia/$(DEPDIR) gpu/opencl/$(DEPDIR) lush-agents/$(DEPDIR) lush/$(DEPDIR) memory/$(DEPDIR) messages/$(DEPDIR) monitor-exts/$(DEPDIR) ompt/$(DEPDIR) os/linux/$(DEPDIR) sample-sources/$(DEPDIR) sample-sources/blame-shift/$(DEPDIR) sample-sources/perf/$(DEPDIR) syscalls/$(DEPDIR) trampoline/aarch64/$(DEPDIR) trampoline/common/$(DEPDIR) trampoline/x86-family/$(DEPDIR) unwind/common/$(DEPDIR) unwind/generic-libunwind/$(DEPDIR) unwind/ppc64/$(DEPDIR) unwind/x86-family/$(DEPDIR) unwind/x86-family/manual-intervals/$(DEPDIR) utilities/$(DEPDIR) utilities/arch/ia64/$(DEPDIR) utilities/arch/libunwind/$(DEPDIR) utilities/arch/ppc64/$(DEPDIR) utilities/arch/x86-family/$(DEPDIR)
+	-rm -rf ./$(DEPDIR) audit/$(DEPDIR) cct/$(DEPDIR) dlmopen/$(DEPDIR) dyninst/$(DEPDIR) extern-real/$(DEPDIR) fnbounds/$(DEPDIR) gpu/$(DEPDIR) gpu/amd/$(DEPDIR) gpu/instrumentation/$(DEPDIR) gpu/level0/$(DEPDIR) gpu/nvidia/$(DEPDIR) gpu/opencl/$(DEPDIR) lush-agents/$(DEPDIR) lush/$(DEPDIR) memory/$(DEPDIR) messages/$(DEPDIR) monitor-exts/$(DEPDIR) ompt/$(DEPDIR) os/linux/$(DEPDIR) sample-sources/$(DEPDIR) sample-sources/blame-shift/$(DEPDIR) sample-sources/perf/$(DEPDIR) syscalls/$(DEPDIR) trampoline/aarch64/$(DEPDIR) trampoline/common/$(DEPDIR) trampoline/x86-family/$(DEPDIR) unwind/common/$(DEPDIR) unwind/generic-libunwind/$(DEPDIR) unwind/ppc64/$(DEPDIR) unwind/x86-family/$(DEPDIR) unwind/x86-family/manual-intervals/$(DEPDIR) utilities/$(DEPDIR) utilities/arch/ia64/$(DEPDIR) utilities/arch/libunwind/$(DEPDIR) utilities/arch/ppc64/$(DEPDIR) utilities/arch/x86-family/$(DEPDIR)
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-tags
@@ -9191,7 +9231,7 @@ install-ps-am:
 installcheck-am:
 
 maintainer-clean: maintainer-clean-recursive
-	-rm -rf ./$(DEPDIR) audit/$(DEPDIR) cct/$(DEPDIR) dlmopen/$(DEPDIR) extern-real/$(DEPDIR) fnbounds/$(DEPDIR) gpu/$(DEPDIR) gpu/amd/$(DEPDIR) gpu/instrumentation/$(DEPDIR) gpu/level0/$(DEPDIR) gpu/nvidia/$(DEPDIR) gpu/opencl/$(DEPDIR) lush-agents/$(DEPDIR) lush/$(DEPDIR) memory/$(DEPDIR) messages/$(DEPDIR) monitor-exts/$(DEPDIR) ompt/$(DEPDIR) os/linux/$(DEPDIR) sample-sources/$(DEPDIR) sample-sources/blame-shift/$(DEPDIR) sample-sources/perf/$(DEPDIR) syscalls/$(DEPDIR) trampoline/aarch64/$(DEPDIR) trampoline/common/$(DEPDIR) trampoline/x86-family/$(DEPDIR) unwind/common/$(DEPDIR) unwind/generic-libunwind/$(DEPDIR) unwind/ppc64/$(DEPDIR) unwind/x86-family/$(DEPDIR) unwind/x86-family/manual-intervals/$(DEPDIR) utilities/$(DEPDIR) utilities/arch/ia64/$(DEPDIR) utilities/arch/libunwind/$(DEPDIR) utilities/arch/ppc64/$(DEPDIR) utilities/arch/x86-family/$(DEPDIR)
+	-rm -rf ./$(DEPDIR) audit/$(DEPDIR) cct/$(DEPDIR) dlmopen/$(DEPDIR) dyninst/$(DEPDIR) extern-real/$(DEPDIR) fnbounds/$(DEPDIR) gpu/$(DEPDIR) gpu/amd/$(DEPDIR) gpu/instrumentation/$(DEPDIR) gpu/level0/$(DEPDIR) gpu/nvidia/$(DEPDIR) gpu/opencl/$(DEPDIR) lush-agents/$(DEPDIR) lush/$(DEPDIR) memory/$(DEPDIR) messages/$(DEPDIR) monitor-exts/$(DEPDIR) ompt/$(DEPDIR) os/linux/$(DEPDIR) sample-sources/$(DEPDIR) sample-sources/blame-shift/$(DEPDIR) sample-sources/perf/$(DEPDIR) syscalls/$(DEPDIR) trampoline/aarch64/$(DEPDIR) trampoline/common/$(DEPDIR) trampoline/x86-family/$(DEPDIR) unwind/common/$(DEPDIR) unwind/generic-libunwind/$(DEPDIR) unwind/ppc64/$(DEPDIR) unwind/x86-family/$(DEPDIR) unwind/x86-family/manual-intervals/$(DEPDIR) utilities/$(DEPDIR) utilities/arch/ia64/$(DEPDIR) utilities/arch/libunwind/$(DEPDIR) utilities/arch/ppc64/$(DEPDIR) utilities/arch/x86-family/$(DEPDIR)
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 

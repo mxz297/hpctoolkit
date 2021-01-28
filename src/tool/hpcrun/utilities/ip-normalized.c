@@ -55,7 +55,7 @@
 //*************************** User Include Files ****************************
 
 #include "ip-normalized.h"
-#include <hpcrun/unwind/common/dyninst_translation.h>
+#include <hpcrun/dyninst/dyninst-translation.h>
 #include <messages/messages.h>
 
 //*************************** Forward Declarations **************************
@@ -70,7 +70,6 @@ const ip_normalized_t ip_normalized_NULL_lval = ip_normalized_NULL;
 ip_normalized_t
 hpcrun_normalize_ip(void* unnormalized_ip, load_module_t* lm)
 {
-  unnormalized_ip = hpcrun_dyninst_translation_lookup(unnormalized_ip);
   TMSG(NORM_IP, "normalizing %p, w load_module %s", unnormalized_ip, NULL_OR_NAME(lm));
   if (!lm) {
     lm = hpcrun_loadmap_findByAddr(unnormalized_ip, unnormalized_ip);

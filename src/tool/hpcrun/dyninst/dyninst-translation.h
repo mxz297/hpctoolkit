@@ -47,20 +47,35 @@
 #ifndef _DYNINST_TRANSLATION_H_
 #define _DYNINST_TRANSLATION_H_
 
+#include <libunwind.h>
+
+typedef enum {
+  DYNINST_TRANSLATION_ORIGINAL = 0,
+  DYNINST_TRANSLATION_RELOCATION = 1,
+  DYNINST_TRANSLATION_INSTRUMENTATION = 2
+} dyninst_translation_result_type_t;
+
 //---------------------------------------------------------------------
 // interface operations
 //---------------------------------------------------------------------
 
-void*
-hpcrun_dyninst_translation_lookup
+dyninst_translation_result_type_t
+dyninst_translation_lookup
 (
-  void* input_addr
+  void* input_addr,
+  void** output_addr_ptr
 );
 
 void
-hpcrun_dyninst_translation_init
+dyninst_translation_init
 (
     
+);
+
+dyninst_translation_result_type_t
+dyninst_translation_update_libunwind_cursor
+(
+  unw_cursor_t* uc
 );
 
 #endif

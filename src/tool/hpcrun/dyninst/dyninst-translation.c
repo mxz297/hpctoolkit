@@ -57,7 +57,7 @@
 // local include files
 //---------------------------------------------------------------------
 
-#include "dyninst_translation.h"
+#include "dyninst/dyninst-translation.h"
 #include "loadmap.h"
 
 //---------------------------------------------------------------------
@@ -65,6 +65,7 @@
 //---------------------------------------------------------------------
 
 #define DT_DYNINST_RELOCMAP 0x6D191959
+#define IP_OFFSET_IN_CURSOR 3
 
 //******************************************************************************
 // type
@@ -90,22 +91,22 @@ static inst_mapping_table_t* inst_mapping = NULL;
 static void
 dyninst_translation_notify_map(load_module_t* lm)
 {
-  if (lm == NULL || lm->dso_info == NULL) return;  
+  if (lm == NULL || lm->dso_info == NULL) return;
   if (inst_mapping == NULL) {
     // Get DYNAMIC section
     struct dl_phdr_info* map = &(lm->phdr_info);
-    ElfW(Dyn)* dynamic_loc = NULL;    
+    ElfW(Dyn)* dynamic_loc = NULL;
     for(size_t i = 0; i < map->dlpi_phnum; i++) {
       if(map->dlpi_phdr[i].p_type == PT_DYNAMIC) {
-        dynamic_loc = (const void*)map->dlpi_addr + map->dlpi_phdr[i].p_vaddr;
+        dynamic_loc = (void*)map->dlpi_addr + map->dlpi_phdr[i].p_vaddr;
         break;
       }
     }
-    for(const ElfW(Dyn)* d = dynamic_loc; d->d_tag != DT_NULL; d++) {      
+    for(const ElfW(Dyn)* d = dynamic_loc; d->d_tag != DT_NULL; d++) {
       if(d->d_tag != DT_DYNINST_RELOCMAP) continue;
       inst_mapping = (inst_mapping_table_t*)d->d_un.d_ptr;
       break;
-    }    
+    }
     /*
     if (inst_mapping != NULL) {
       fprintf(stderr, "inst mapping %p\n", inst_mapping);
@@ -129,24 +130,39 @@ dyninst_translation_notify_unmap(load_module_t* lm)
 // interface operations
 //---------------------------------------------------------------------
 
-void*
-hpcrun_dyninst_translation_lookup
+dyninst_translation_result_type_t
+dyninst_translation_lookup
 (
-  void* input_addr
+  void* input_addr,
+  void** output_addr_ptr
 )
 {
-  if (inst_mapping == NULL) return input_addr;
+  if (inst_mapping == NULL) {
+    *output_addr_ptr = input_addr;
+    return DYNINST_TRANSLATION_ORIGINAL;
+  }
   uint64_t addr = (uint64_t)input_addr;
   //fprintf(stderr, "enter uw_translation_lookup: addr %p\n", input_addr);
-  if (addr < inst_mapping->entries[0].reloc_addr) return input_addr;
+  if (addr < inst_mapping->entries[0].reloc_addr) {
+    *output_addr_ptr = input_addr;
+    return DYNINST_TRANSLATION_ORIGINAL;
+  }
+
   uint64_t upper_bound = inst_mapping->entries[inst_mapping->total - 1].reloc_addr + inst_mapping->entries[inst_mapping->total - 1].size;
-  if (addr >= upper_bound) return input_addr;
+  if (addr >= upper_bound) {
+    *output_addr_ptr = input_addr;
+    return DYNINST_TRANSLATION_ORIGINAL;
+  }
 
   unsigned long left = 0, right = inst_mapping->total - 1, mid;
-  if (addr >= inst_mapping->entries[right].reloc_addr) {
-    void* ret_addr = (void*)(addr - inst_mapping->entries[right].reloc_addr + inst_mapping->entries[right].orig_addr);
-    //fprintf(stderr, "\ttranslation %p\n", ret_addr);
-    return ret_addr;
+  if (addr >= inst_mapping->entries[right].reloc_addr) {    
+    if (inst_mapping->entries[right].orig_addr == -1) {
+      dyninst_translation_lookup((void*)(inst_mapping->entries[right].reloc_addr + inst_mapping->entries[right].size), output_addr_ptr);      
+      return DYNINST_TRANSLATION_INSTRUMENTATION;
+    } else {
+      *output_addr_ptr = (void*)(addr - inst_mapping->entries[right].reloc_addr + inst_mapping->entries[right].orig_addr);
+      return DYNINST_TRANSLATION_RELOCATION;
+    }
   }
   while (left <= right) {
     mid = (left + right) / 2;
@@ -158,13 +174,18 @@ hpcrun_dyninst_translation_lookup
       left = mid + 1;
     }
   }
-  void* ret_addr = (void*)(addr - inst_mapping->entries[mid].reloc_addr + inst_mapping->entries[mid].orig_addr);
-  //fprintf(stderr, "\ttranslation %p\n", ret_addr);
-  return ret_addr;
+  
+  if (inst_mapping->entries[mid].orig_addr == -1) {
+    dyninst_translation_lookup((void*)(inst_mapping->entries[mid].reloc_addr + inst_mapping->entries[mid].size), output_addr_ptr);    
+    return DYNINST_TRANSLATION_INSTRUMENTATION;
+  } else {
+    *output_addr_ptr = (void*)(addr - inst_mapping->entries[mid].reloc_addr + inst_mapping->entries[mid].orig_addr);
+    return DYNINST_TRANSLATION_RELOCATION;
+  }
 }
 
 void
-hpcrun_dyninst_translation_init
+dyninst_translation_init
 (
 
 )
@@ -174,4 +195,20 @@ hpcrun_dyninst_translation_init
    dyninst_translation_notifiers.map = dyninst_translation_notify_map;
    dyninst_translation_notifiers.unmap = dyninst_translation_notify_unmap;
    hpcrun_loadmap_notify_register(&dyninst_translation_notifiers);
+}
+
+dyninst_translation_result_type_t
+dyninst_translation_update_libunwind_cursor
+(
+  unw_cursor_t* uc
+)
+{
+  unw_word_t* typed_cursor = (unw_word_t*) uc;
+  void *ip, *new_ip;
+  ip = (void*)(typed_cursor[IP_OFFSET_IN_CURSOR]);
+  dyninst_translation_result_type_t ret = dyninst_translation_lookup(ip, &new_ip);
+  if (ret != DYNINST_TRANSLATION_ORIGINAL) {
+    typed_cursor[IP_OFFSET_IN_CURSOR] = (unw_word_t)new_ip;
+  }
+  return ret;
 }
