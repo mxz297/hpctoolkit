@@ -155,9 +155,9 @@ dyninst_translation_lookup
   }
 
   unsigned long left = 0, right = inst_mapping->total - 1, mid;
-  if (addr >= inst_mapping->entries[right].reloc_addr) {    
+  if (addr >= inst_mapping->entries[right].reloc_addr) {
     if (inst_mapping->entries[right].orig_addr == -1) {
-      dyninst_translation_lookup((void*)(inst_mapping->entries[right].reloc_addr + inst_mapping->entries[right].size), output_addr_ptr);      
+      dyninst_translation_lookup((void*)(inst_mapping->entries[right].reloc_addr + inst_mapping->entries[right].size), output_addr_ptr);
       return DYNINST_TRANSLATION_INSTRUMENTATION;
     } else {
       *output_addr_ptr = (void*)(addr - inst_mapping->entries[right].reloc_addr + inst_mapping->entries[right].orig_addr);
@@ -174,9 +174,9 @@ dyninst_translation_lookup
       left = mid + 1;
     }
   }
-  
+
   if (inst_mapping->entries[mid].orig_addr == -1) {
-    dyninst_translation_lookup((void*)(inst_mapping->entries[mid].reloc_addr + inst_mapping->entries[mid].size), output_addr_ptr);    
+    dyninst_translation_lookup((void*)(inst_mapping->entries[mid + 1].reloc_addr), output_addr_ptr);
     return DYNINST_TRANSLATION_INSTRUMENTATION;
   } else {
     *output_addr_ptr = (void*)(addr - inst_mapping->entries[mid].reloc_addr + inst_mapping->entries[mid].orig_addr);
